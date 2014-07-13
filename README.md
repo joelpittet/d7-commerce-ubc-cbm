@@ -2,15 +2,15 @@
 # Help Document
 =========================================================
 
-UBC CBM Payment module was created to be used with Drupal Commerce framework to allow payment transactions with
+UBC CBM Payment module was created  to be used with Drupal Commerce framework to allow payment transactions with
 UBC CBM payment gateway.
 
 Information about UBC CBM Payment gateway can be found at
 
 https://epayment.it.ubc.ca/
 
-For issues or problems relating to the funcitonality of the UBC CBM Module not addressed in this document contact:
-UBC Web Services at webservices.ubcit@ubc.ca
+Questions or concerns either post new issue in git hub repo or contact
+UBC IT Web Services at http://it.ubc.ca/services/web-servers-storage/websites
 
 
 ## A: Installation
