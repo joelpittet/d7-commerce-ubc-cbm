@@ -73,12 +73,13 @@ D: Uninstalling UBC CBM Module
 3. Go to Modules -> Commerce (contrib) and deactivate UBC CBM Payment
 
 Notes regarding disabling the UBC CBM Module
-1.  The payment configuration is set up using the Rules module, as of Commerce 7.x-1.3 there is no reliable way to clear out the payment rule set up for your payment method.
-       So by disabling the rule will deactivate it but all data relating to this payment method is still in the database
-2.  When the module is disabled, the payment configuration rule show red warning text that there is no payment module associated with that rule.
-3.  The GL Account field is created as part of the Fields module, like the payment configuration rule the GL Account field is also left behind
-        You can delete go into admin/commerce/products/types/ and choosing a product type "manage fields" delete that field from being associated with that type
-        But this will also delete any data associated with the product in that field will, use with caution
+
+* The payment configuration is set up using the Rules module, as of Commerce 7.x-1.3 there is no reliable way to clear out the payment rule set up for your payment method.
+  *  By disabling the rule will deactivate it but all data relating to this payment method is still in the database
+* When the module is disabled, the payment configuration rule show red warning text that there is no payment module associated with that rule.
+* The GL Account field is created as part of the Fields module, like the payment configuration rule the GL Account field is also left behind
+  * You can delete go into admin/commerce/products/types/ and choosing a product type "manage fields" delete that field from being associated with that type
+  * But this will also delete any data associated with the product in that field will, use with caution
 
 
 
