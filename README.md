@@ -1,5 +1,5 @@
 
- Help Document for UBC CBM Payment Module
+# Help Document for UBC CBM Payment Module
 =========================================================
 
 UBC CBM Payment module was created to be used with Drupal Commerce framework to allow payment transactions with
@@ -13,7 +13,7 @@ For issues or problems relating to the funcitonality of the UBC CBM Module not a
 UBC Web Services at webservices.ubcit@ubc.ca
 
 
-A: Installation
+## A: Installation
 ------------------------------------
 Edit commerce-ubc-cbm.module constants to be CBM server domains and URI paths.
 Server URL and paths can be found at https://eypayment.it.ubc.ca/developers.
@@ -23,7 +23,7 @@ Navigate to admin/modules.
 Enable Commerce_ubc_cbm, which can be found in Commerce (contrib) package.
 
 
-B: Configuration
+## B: Configuration
 ------------------------------------
 
 1. Go to Store -> Configuration -> Payment methods
@@ -49,7 +49,7 @@ B: Configuration
   * check "Testing Mode" to have your transactions handled by the testing servers, uncheck when ready to have purchase handled by production servers
 6. Go to People -> Permissions and check to allow "anonymous user" for "Access UBC CBM Payment"
 
-C: If you wish to sales of different products to be applied to different FMS accounts
+## C: If you wish to sales of different products to be applied to different FMS accounts
 ----------------------------------------------------------------------------------------
 1. Go to Store -> Products -> Product types at admin/commerce/products/types
 2. Select "manage fields" for any of the product types
@@ -66,7 +66,7 @@ C: If you wish to sales of different products to be applied to different FMS acc
 7. Edit each of your products selecting the account you wish to applied to their sales, or ensure "Default Account" is set.
 
 
-D: Uninstalling UBC CBM Module
+## D: Uninstalling UBC CBM Module
 -------------------------------------
 1. Go to Store -> Configuration -> Payment methods
 2. "Disable" UBC ePayement
@@ -83,7 +83,7 @@ Notes regarding disabling the UBC CBM Module
 
 
 
-E: Trouble-shooting
+## E: Trouble-shooting
 -----------------------------
 1. Enabled module but payment option not shown as option in configuration for Payment methods.
    Try clearing cache, manually running cron and try again.
