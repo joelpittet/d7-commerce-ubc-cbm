@@ -7,8 +7,6 @@
  *  Developed by: UBC IT Web Services, Valerie
  *  August 2012
  *
- *  See: ShareIT projects/sala/D7_Commerce_CBM_Payment_tech_Design for full description technical design and workflow descriptions
- *  
  *****/
 
 /** constants **/
@@ -20,20 +18,24 @@ define('STATUS_SUCCESS', '0');
 define('STATUS_DECLINE', '5');
 define('STATUS_FAIL', '99');
 
-define('TEST_AUTH_URL','servicestest.as.it.ubc.ca');
-define('TEST_AUTH_DIR','/authServer/authenticate');
+/***
+ *  NOTE! -- Update URL and DIR constants marked with *** to real server values.
+ *  Server URL information can be found at https://epayment.it.ubc.ca/developers
+ */
+define('TEST_AUTH_URL','change.this.ubc.ca'); //*** test authentication server domain
+define('TEST_AUTH_DIR','/change/this'); //*** test authentication server URI path
+define('TEST_PAY_URL', 'change.this.ubc.ca'); //*** test payment server domain
+define('TEST_PAY_DIR', '/change/this'); //*** test payment server URI path
+define('PROD_AUTH_URL','change.this.ubc.ca'); //*** production authentication server domain
+define('PROD_AUTH_DIR', '/change/this'); //*** test authentication server URI path
+define('PROD_PAY_URL', 'change.this.ubc.ca'); //*** production payment server domain
+define('PROD_PAY_DIR', '/change/this'); //*** production payment server URI path
+// end of required constants to update
+
+define('PROD_AUTH_PORT', '443');
 define('TEST_AUTH_PORT', '8301');
-define('PROD_AUTH_URL','ssc.adm.ubc.ca');
-define('PROD_AUTH_DIR', '/authServer/authenticate');
-define('PROD_AUTH_PORT', '443'); // not sure!
-
-define('TEST_PAY_URL', 'ccwstest.as.it.ubc.ca');
-define('TEST_PAY_DIR', '/creditcardservice/CreditCardPaymentForm');
 define('TEST_PAY_PORT', '8101');
-define('PROD_PAY_URL', 'cbm.adm.ubc.ca'); //https
-define('PROD_PAY_DIR', '/creditcardservice/CreditCardPaymentForm');
 define('PROD_PAY_PORT', '');
-
 
 define('MASTER_TICKET_ERROR_MSG', 'UBC ePayment gateway is unavailable at this time');
 define('SESSION_TICKET_ERROR_MSG', 'Attemp to connect with UBC ePayment gateay failed.');
@@ -45,7 +47,7 @@ define('COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD', 'commerce_ubc_cbm_gl_account');
 SRCE_TYP_CD = merchant_id  or merchant_user_id ?? not sure says 'identifier of user', but later says merchant_id as sent to server...
 TICKET = session ticket
 TRAN_AMOUNT = transaction amount
-CONTINUE_URL = url to return to when trans-complete supplied to payment server 
+CONTINUE_URL = url to return to when trans-complete supplied to payment server
 NOTIFY_URL = url where server is to send notification request
 CBM_ID = unique identifier sent by server in notification/continuation request (needed in notification response)
 MERCHANT_ID = merchant transaction id as returned in notification/continueation request (needed in notification response)
@@ -74,13 +76,13 @@ function commerce_ubc_cbm_commerce_payment_method_info() {
   return $payment_methods;
 }
 
-/*  
+/*
  *  Set Permissions
  */
 function commerce_ubc_cbm_permission() {
     return array(
     'access ubc_cbm content' => array(
-      'title' => t('Access UBC ePayment'), 
+      'title' => t('Access UBC ePayment'),
       'description' => t('Access UBC CBM for server to server communication.'),
     ),
   );
@@ -145,12 +147,12 @@ function commerce_ubc_cbm_default_settings(){
  *   A form snippet.
  */
 function commerce_ubc_cbm_settings_form($settings = NULL)  {
-  
+
   $settings += commerce_ubc_cbm_default_settings();
   $form = array();
   $instruct_text = 'Enter information here about your merchant account with SIS/ePayment. If you have multiple GL Accounts set up with SIS, and want to be able to have sales applied to different accounts. !accountlink for any of your product types and edit CBM GL Account field.';
   $message = t($instruct_text, array('!accountlink' => l('Select manage fields', 'admin/commerce/products/types')));
-  
+
   $form['cbm_merchant'] = array(
       '#type'=>'fieldset',
       '#title'=>'Merchant Account Settings',
@@ -212,7 +214,7 @@ function commerce_ubc_cbm_settings_form($settings = NULL)  {
       '#default_value' => $settings['cbm_debugging']['log'],
       '#description'=>t('Recommended even in live production.'),
   );*/
-  
+
 
   return $form;
 }
@@ -224,7 +226,7 @@ function commerce_ubc_cbm_enable() {
   // Add GL Account field to billing profile type.
   commerce_ubc_cbm_add_account_field();
 
-  
+
   // Tell user a new field has been added.
   $message_text = 'Commerce UBC CBM added a new field to "product types" for selecting CBM GL Account to use for individual products. ' . 'If you already have this enabled, you should !disablelink now to avoid ' . 'confusion managing products and payment accounts.';
   $message = t($message_text, array('!disablelink' => l('disable fields', 'admin/commerce/products/types')));
@@ -243,13 +245,13 @@ function commerce_ubc_cbm_disable(){
 }
 
 /**
- *  Called when module enabled, adds a CBM GL Account field to product types, to be able to assign product sales to be tied to specific accounts. 
+ *  Called when module enabled, adds a CBM GL Account field to product types, to be able to assign product sales to be tied to specific accounts.
  */
 function commerce_ubc_cbm_add_account_field() {
-    
+
      // Look for or add a GL Account list field to add to product
     $field = field_info_field(COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD);
-   
+
     if (empty($field)) {
         $field = array(
           'field_name' => COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD,
@@ -260,14 +262,14 @@ function commerce_ubc_cbm_add_account_field() {
           'locked' => FALSE,
           'settings'=>array('allowed_values' =>get_account_list_array('default|Default Account')),
         );
-    
+
         $field = field_create_field($field);
     }
 
     $product_types = commerce_product_types();
     foreach($product_types as $key=>$v){
         $instance = field_info_instance('commerce_product', COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD, $key);
-        
+
         if (empty($instance)) {
         $instance = array(
           'field_name' => COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD,
@@ -281,7 +283,7 @@ function commerce_ubc_cbm_add_account_field() {
           'settings' => array(),
           'display' => array(),
         );
-    
+
         // Set the default display formatters for various view modes.
         foreach (array('default', 'administrator') as $view_mode) {
           $instance['display'][$view_mode] = array(
@@ -290,7 +292,7 @@ function commerce_ubc_cbm_add_account_field() {
             'weight' => -10,
           );
         }
-    
+
         $new_instance = field_create_instance($instance);
         }
     }
@@ -316,7 +318,7 @@ function ommerce_ubc_cbm_submit_form($payment_method, $pane_values, $checkout_pa
   if (!empty($order->data['commerce_ubc_cbm'])) {
     $pane_values += $order->data['commerce_ubc_cbm'];
   }
-  
+
   return $form;
 
 }
@@ -325,36 +327,36 @@ function ommerce_ubc_cbm_submit_form($payment_method, $pane_values, $checkout_pa
  * Payment method callback; generation callback for the payment redirect form.
  *
  * Returns form elements that should be submitted to the redirected payment
- * service; because of the array merge that happens upon return, the service’s
+ * service; because of the array merge that happens upon return, the serviceï¿½s
  * URL that should receive the POST variables should be set in the #action
  * property of the returned form array.
  */
 function commerce_ubc_cbm_redirect_form($form, &$form_state, $order, $payment_method) {
-  
+
   if (empty($payment_method['settings']['cbm_merchant']['cbm_merchant_id'])) {
     $message = 'UBC ePayment is not configured for use. No ePayment account has been set up.';
     drupal_set_message(t($message), 'error');
     watchdog('commerce_ubc_cbm', 'Payment redirect form cannot be built: !param', array('!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>', WATCHDOG_ERROR));
     return array();
   }
-  
+
   if(!($wrapper=entity_metadata_wrapper('commerce_order', $order))){
     $message = 'UBC ePayment is not configured for use. Order not available.';
     drupal_set_message(t($message), 'error');
     watchdog('commerce_ubc_cbm', 'Payment redirect form cannot be built: !param', array('!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>', WATCHDOG_ERROR));
     return array();
   }
-  
+
   /*$settings = array(
     // Return to the payment redirect page for processing continuation requests coming from ePayment
     'continue' => url('checkout/' . $order->order_id . '/payment/return/' . $order->data['payment_redirect_key'], array('absolute' => TRUE)),
   );*/
-  
+
   return commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_method);
 }
 
 function commerce_ubc_cbm_redirect_form_validate($order, $payment_method){
-    if( $_SERVER['REQUEST_METHOD'] === 'POST' ) { 
+    if( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         if(isset($_POST['STATUS_CODE'])){
             $status = $_POST['STATUS_CODE'];
             if($status == STATUS_FAIL || $status == STATUS_DECLINE){
@@ -378,17 +380,17 @@ function commerce_ubc_cbm_redirect_form_validate($order, $payment_method){
  **/
 function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_method){
   global $base_url;
-  
+
   $settings = $payment_method['settings'];
   $continue = '/checkout/' . $order->order_id . '/payment/return/' . $order->data['payment_redirect_key'];
   $server = 'payment';
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  
-  
+
+
   $charge['currency_code'] = $order_wrapper->commerce_order_total->currency_code->value();
   $charge['amount'] = $order_wrapper->commerce_order_total->amount->value();
-  
-  
+
+
   if (!$charge['amount']) {
     drupal_set_message(t('UBC ePayment is not configured for use. No charge set up.'), 'error');
     return array();
@@ -399,21 +401,21 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
      $transaction = getTransactionByPropery('order_id', $order->order_id);
   }
 
-  
-  
+
+
   // 2. get new transaction (with id)
   if($transaction){
 
         $transaction->revision = TRUE;
         // 3. get Session ticket
         $ticket = requestSessionTicket($settings);
-        
+
         if (!$ticket) {
           drupal_set_message(t('UBC ePayment is not properly configured for use. Unable to create a connection with payment server.'), 'error');
           return array();
         }
-        
-        
+
+
         // 5 prepare payment request as name-value-pair array
         $nvp = array(
           'SRCE_TYP_CD'=>$settings['cbm_merchant']['cbm_merchant_id'],
@@ -425,7 +427,7 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
           'GL_ACCT_CD' => $settings['cbm_merchant']['cbm_default_fms'],
           'ITEM_DESCRIPTION' => 'Order No.: '.$order->order_id,
         );
-        
+
         // 4. Figure out gl_account amounts if any
         $gl_accounts = getGLAccountAmounts($order, $settings);
         if($gl_accounts){
@@ -436,21 +438,21 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
               $nvp['TRAN_AMOUNT'.$i] = $amount/100;
               $i++;
           }
-          
+
         }
 
         // 5 update tranaction with payload information
         $now = date("Y-m-d H:i:s",time());
         $transaction->payload[$now] = array('payment_request'=>$nvp);
         $transaction->status = COMMERCE_PAYMENT_STATUS_PENDING;
-      
+
         // Save the transaction information.
         commerce_payment_transaction_save($transaction);
          watchdog('commerce_ubc_cbm', 'Built payment request for transaction: !param', array('!param' => '<pre>' . check_plain(print_r($transaction, TRUE)) . '</pre>', WATCHDOG_DEBUG));
-           
+
          // 6. Build form values
         $form['#action'] = buildPaymentURL($settings);
-        
+
         foreach ($nvp as $name => $value) {
             if (!empty($value)) {
               $form[$name] = array('#type' => 'hidden', '#value' => $value);
@@ -460,7 +462,7 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
             '#type' => 'submit',
             '#value' => t('Proceed to ePayment'),
         );
-    
+
         return $form;
   }else{
     $message = 'UBC ePayment problem processing order. No transaction found';
@@ -468,11 +470,11 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
     watchdog('commerce_ubc_cbm', 'Payment request cannot be build: : !param', array('!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>', WATCHDOG_ERROR));
     return array();
   }
-  
+
 }
 
 /**
- * Payment request/response fucntions 
+ * Payment request/response fucntions
  *
  * */
 function initTransaction($payment_method, $charge, $order){
@@ -492,7 +494,7 @@ function getTransactionByPropery($property, $value){
                        ->propertyCondition($property, $value)
                        ->entityOrderBy('revision_id')
                        ->execute();
-                       
+
     if(!empty($result[$type])){
         $ids = array_keys($result[$type]);
         $entities = entity_load($type, $ids );
@@ -507,10 +509,10 @@ function getGLAccountAmounts($order, $settings){
     $accounts = array();
     $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
     $default_account = $settings['cbm_merchant']['cbm_default_fms'];
-    
+
    foreach ($order_wrapper->commerce_line_items as $delta => $line_item_wrapper) {
         $gl_account = $line_item_wrapper->commerce_product->commerce_ubc_cbm_gl_account->value();
-        
+
         if (isset($gl_account)) {
             if( $gl_account == 'default'){
                 $gl_account = $default_account;
@@ -519,11 +521,11 @@ function getGLAccountAmounts($order, $settings){
                 $accounts[$gl_account] = 0;
             }
             $accounts[$gl_account] += ( (int) $line_item_wrapper->quantity->value() *  $line_item_wrapper->commerce_unit_price->amount->value());
-        }  
+        }
         //watchdog('commerce_ubc_cbm', 'Line Item properties. !param', array('!param' => '<pre>' . check_plain(print_r($line_item_wrapper, TRUE)) . '</pre>', WATCHDOG_DEBUG));
- 
+
     }
-    
+
     return $accounts;
 }
 
@@ -540,13 +542,13 @@ function buildPaymentURL($settings){
 function getServerConnection($server, $isDev){
     if($server == 'auth'){
         if($isDev){
-            $conn = array('URL'=>TEST_AUTH_URL,'DIR'=>TEST_AUTH_DIR,'PORT'=>TEST_AUTH_PORT,);       
+            $conn = array('URL'=>TEST_AUTH_URL,'DIR'=>TEST_AUTH_DIR,'PORT'=>TEST_AUTH_PORT,);
         }else{
             $conn = array('URL'=>PROD_AUTH_URL,'DIR'=>PROD_AUTH_DIR,'PORT'=>PROD_AUTH_PORT,);
         }
     }else{
         if($isDev){
-            $conn = array('URL'=>TEST_PAY_URL,'DIR'=>TEST_PAY_DIR,'PORT'=>TEST_PAY_PORT,);       
+            $conn = array('URL'=>TEST_PAY_URL,'DIR'=>TEST_PAY_DIR,'PORT'=>TEST_PAY_PORT,);
         }else{
             $conn = array('URL'=>PROD_PAY_URL,'DIR'=>PROD_PAY_DIR,'PORT'=>PROD_PAY_PORT,);
         }
@@ -559,12 +561,12 @@ function loadRequest() {
 
   $postedXML = $_POST['xml_details'];
   $xmlArray = json_decode(json_encode((array) simplexml_load_string($postedXML)),1);
-  return $xmlArray;	
+  return $xmlArray;
 }
 
 // Listener to process incoming Payment Service Notification requests
 function processNotificationRequest(){
-    
+
     if( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         $now = date("Y-m-d H:i:s",time());
         $xmlArray = loadRequest();
@@ -573,7 +575,7 @@ function processNotificationRequest(){
             // goto fail page?
         }
         watchdog('commerce_ubc_cbm', 'Notification request received: !param', array('!param' => '<pre>' . check_plain(print_r($_POST, TRUE)) . '</pre>', WATCHDOG_DEBUG));
-        
+
         $trans_id = $xmlArray['MERCHANT_ID'];
         $remote_id = $xmlArray['CBM_ID'];
         $status = $xmlArray['STATUS_CODE'];
@@ -589,16 +591,16 @@ function processNotificationRequest(){
             $XMLArray = convertXMLToArray($xml);
             $now = date("Y-m-d H:i:s",time());
             $transaction->payload[$now] = array('notification_response'=>$XMLArray);
-            
+
             commerce_payment_transaction_save($transaction);
             watchdog('commerce_ubc_cbm', 'Built notification response for transaction: !param', array('!param' => '<pre>' . check_plain(print_r($transaction, TRUE)) . '</pre>', WATCHDOG_DEBUG));
-            
+
 			//Increment Order status to Pending, since this transaction is happening
 			$order = commerce_order_load($transaction->order_id);
 			rules_invoke_all('commerce_checkout_complete', $order);
-            
+
         }else{
-            $xml = buildNotificationXML($remote_id, $trans_id, 99);     
+            $xml = buildNotificationXML($remote_id, $trans_id, 99);
         }
     }
     $response = array('xml_response'=>$xml);
@@ -620,7 +622,7 @@ function buildNotificationXML($cbm_id, $trans_id, $status){
 
 //  process incoming Payment Service Continuation requests
 function commerce_ubc_cbm_redirect_form_submit(){
-    
+
     if( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
         $now = date("Y-m-d H:i:s",time());
         if(!isset($_POST['MERCHANT_ID'])){
@@ -628,14 +630,14 @@ function commerce_ubc_cbm_redirect_form_submit(){
             // goto fail page?
         }
         watchdog('commerce_ubc_cbm', 'Continuation request received: !param', array('!param' => '<pre>' . check_plain(print_r($_POST, TRUE)) . '</pre>', WATCHDOG_DEBUG));
- 
+
         $remote_id = $_POST['CBM_ID'];
         $remote_status = $_POST['STATUS_CODE'];
         $trans_id = $_POST['MERCHANT_ID'];
         $message = $_POST['MESSAGE'];
         $amount = $_POST['AMOUNT'];
         $status = ($remote_status == STATUS_SUCCESS ? 'success' : 'failure');
-        
+
         if($transaction = getTransactionByPropery('transaction_id', $trans_id)){
             $transaction->payload[$now] = array('notification_request'=>$_POST);
             $transaction->revision = TRUE;
@@ -645,11 +647,11 @@ function commerce_ubc_cbm_redirect_form_submit(){
             $transaction->payload[$now] = $_POST;
             $transaction->status = $status;
             commerce_payment_transaction_save($transaction);
-            
+
         }
-        
+
     }
-   
+
 }
 
 
@@ -671,7 +673,7 @@ function connectPaymentServer($isDev){
     }else{
         $pay = array('URL'=>PROD_PAY_URL,'DIR'=>PROD_PAY_DIR,'PORT'=>PROD_PAY_PORT,);
     }
-  
+
     $fp = fsockopen($pay['URL'],$pay['PORT'],$errno, $errstr, 30);
     if(!$fp){
          watchdog('commerce_ubc_cbm', 'Failed opening socket to payment server: !param', array('!param' => '<pre>' . check_plain(print_r($errstr, TRUE)) . check_plain(print_r($pay, TRUE)).'</pre>', WATCHDOG_ERROR));
@@ -682,7 +684,7 @@ function connectPaymentServer($isDev){
 }
 
 function buildPayHeader($postString, $isDev=FALSE){
-    
+
     if($isDev){
         $url = TEST_PAY_URL;
         $dir = TEST_PAY_DIR;
@@ -692,23 +694,23 @@ function buildPayHeader($postString, $isDev=FALSE){
         $dir = PROD_PAY_DIR;
         $port = PROD_PAY_PORT;
     }
-    
+
     $out = "POST ". $dir ." HTTP/1.1\r\n";
     $out .= "Host: ".$url.":".$port."\r\n";
     $out .= "Content-Type: text/xml\r\n";
     $out .= "Content-Length: " . strlen ($postString) . "\r\n";
     $out .= "Connection: Close\r\n\r\n";
-    
+
     return $out;
 }
 
 
 /**
- *  Authentication request/response fucntions 
+ *  Authentication request/response fucntions
  *
  **/
 function requestSessionTicket($settings){
-    
+
     $master_ticket = requestMasterTicket($settings);
     if($master_ticket){
         $postData = array('function'=>'getSessionTicket',
@@ -737,7 +739,7 @@ function requestMasterTicket($settings){
                         'function'=>'authenticate',
                         );
      if($response = sendAuthRequest($settings, $postData)){
-    
+
         $xmlFieldArray = array("response-code","auth-ticket");
         if($parsedXML = _extractParam($response, $xmlFieldArray)){
             if(isset($parsedXML['auth-ticket'])){
@@ -772,12 +774,12 @@ function connectAuthenticationServer($settings){
     if($settings['cbm_debugging']['test_mode']){
         $mode = 'testing';
         $auth = array('URL'=>TEST_AUTH_URL,'DIR'=>TEST_AUTH_DIR,'PORT'=>TEST_AUTH_PORT,);
-    
+
     }else{
         $mode = 'production';
         $auth = array('URL'=>"ssl://".PROD_AUTH_URL,'DIR'=>PROD_AUTH_DIR,'PORT'=>PROD_AUTH_PORT,);
     }
-  
+
     $fp = fsockopen($auth['URL'],$auth['PORT'],$errno, $errstr, 30);
     if(!$fp){
         watchdog('commerce_ubc_cbm', 'Failed opening socket to authentication server!param', array('!param' => '<pre>' . check_plain(print_r($errstr, TRUE)). check_plain(print_r($auth, TRUE)) . '</pre>', WATCHDOG_ERROR));
@@ -791,7 +793,7 @@ function connectAuthenticationServer($settings){
 
 
 function buildPostString($postData){
-  $poststring = ""; 
+  $poststring = "";
   foreach($postData AS $key => $val) {
      $poststring .= urlencode($key) . "=" . urlencode($val) . "&";
   }
@@ -800,7 +802,7 @@ function buildPostString($postData){
 }
 
 function buildPostHeader($postString, $isDev=FALSE){
-    
+
     if($isDev){
         $url = TEST_AUTH_URL;
         $dir = TEST_AUTH_DIR;
@@ -810,18 +812,18 @@ function buildPostHeader($postString, $isDev=FALSE){
         $dir = PROD_AUTH_DIR;
         $port = PROD_AUTH_PORT;
     }
-    
+
     $out = "POST ". $dir ." HTTP/1.1\r\n";
     $out .= "Host: ".$url.":".$port."\r\n";
     $out .= "Content-Type: application/x-www-form-urlencoded\r\n";
     $out .= "Content-Length: " . strlen ($postString) . "\r\n";
     $out .= "Connection: Close\r\n\r\n";
-    
+
     return $out;
 }
 
 function sendPost($fp, $post){
-    
+
     $write = fwrite($fp, $post);
     //watchdog('commerce_ubc_cbm', "postToCBM Post:\n$post", WATCHDOG_DEBUG);
     $result = '';
@@ -902,20 +904,20 @@ function convertXMLToArray($xml){
 
 function commerce_ubc_cbm_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
   global $base_url;
-  
+
   $settings = $payment_method['settings'];
   $server = 'payment';
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  
+
   // 1. create and save transaction to get id
   initTransaction($payment_method, $charge, $order);
-  
+
   // 2. get new transaction (with id)
   if($transaction = getTransactionByPropery('order_id', $order->order_id)){
         $transaction->revision = TRUE;
         // 3. get Session ticket
         $ticket = requestSessionTicket($settings);
-        
+
         // 5 prepare payment request as name-value-pair array
         $nvp = array(
           'SRCE_TYP_CD'=>$settings['cbm_merchant_id'],
@@ -925,7 +927,7 @@ function commerce_ubc_cbm_submit_form_submit($payment_method, $pane_form, $pane_
           'CONTINUE_URL'=>$base_url.'/ubc_paymemt/continuation',
           'NOTIFY_URL'=>$base_url.'/ubc_payment/notification'
         );
-        
+
         // 4. Figure out gl_account amounts if any
         $gl_accounts = getGLAccountAmounts($order);
         if(count($gl_accounts) > 0){
@@ -936,15 +938,15 @@ function commerce_ubc_cbm_submit_form_submit($payment_method, $pane_form, $pane_
               $nvp['TRAN_AMOUNT'.$i] = $amount;
           }
         }
-        
+
         // 6 update tranaction with payload information
         $now = time();
         $transaction->payload[$now] = $nvp;
         $transaction->status = COMMERCE_PAYMENT_STATUS_PENDING;
-      
+
         // Save the transaction information.
         commerce_payment_transaction_save($transaction);
-         
+
         // 7 send payment request via cURL
         sendCurlRequest($server, buildPostString($nvp), $settings['test_mode']);
   }
