@@ -35,17 +35,18 @@ Enable Commerce_ubc_cbm, which can be found in Commerce (contrib) package.
   * Merchant ID
   *  Merchant Authentication ID (user name provided by SIS/ePayment used to authenticate access to payment servers)
   * Merchant Authentication Credentials (password provide by SIS/ePayment for access to payment servers)
-  * Default UBC FMS Account -- one long string for account set up with UBC Financial Management System made up of:
-        Fund code (req) + Dept code (req) + program (opt. leave space if not using) + project id (req) + account no. (req)
-        e.g.
-        fund code = F0000
-        dept code = 123010
-        program = CINEP
-        project id = 12F30103
-        account number = 465730
-        FMS account would be: F0000123010 12F30103465730 or F0000123010CINEP12F30103465730
-        Note: if you have only one account you can contact SIS/ePayment and ask that they assign that account to be used as default for all sales
-        See: "Account overriding and splitting" at https://epayment.it.ubc.ca/web-service/accounting-information-and-payment-types
+  * Default UBC FMS Account
+    * this is one long string for account set up with UBC Financial Management System made up of:
+      * Fund code (req) + Dept code (req) + program (opt. leave space if not using) + project id (req) + account no. (req)
+      * for example:
+        * fund code = F0000
+        * dept code = 123010
+        * program = CINEP
+        *  project id = 12F30103
+        * account number = 465730
+        * FMS account would be: F0000123010 12F30103465730 or F0000123010CINEP12F30103465730
+      * Note: if you have only one account you can contact SIS/ePayment and ask that they assign that account to be used as default for all sales
+      * See: "Account overriding and splitting" at https://epayment.it.ubc.ca/web-service/accounting-information-and-payment-types
   * check "Testing Mode" to have your transactions handled by the testing servers, uncheck when ready to have purchase handled by production servers
 6. Go to People -> Permissions and check to allow "anonymous user" for "Access UBC CBM Payment"
 
