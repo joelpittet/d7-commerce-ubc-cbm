@@ -1,4 +1,5 @@
-README.md - Help Document for UBC CBM Payment Module
+
+ Help Document for UBC CBM Payment Module
 =========================================================
 
 UBC CBM Payment module was created to be used with Drupal Commerce framework to allow payment transactions with
