@@ -34,11 +34,11 @@ define('PROD_PAY_DIR', '/change/this'); //*** production payment server URI path
 
 define('PROD_AUTH_PORT', '443');
 define('TEST_AUTH_PORT', '8301');
-define('TEST_PAY_PORT', '8101');
+define('TEST_PAY_PORT', '');
 define('PROD_PAY_PORT', '');
 
 define('MASTER_TICKET_ERROR_MSG', 'UBC ePayment gateway is unavailable at this time');
-define('SESSION_TICKET_ERROR_MSG', 'Attemp to connect with UBC ePayment gateay failed.');
+define('SESSION_TICKET_ERROR_MSG', 'Attempt to connect with UBC ePayment gateway failed.');
 
 define('COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD', 'commerce_ubc_cbm_gl_account');
 
@@ -531,7 +531,7 @@ function getGLAccountAmounts($order, $settings){
 
 function buildPaymentURL($settings){
     if($settings['cbm_debugging']['test_mode']==1){
-        $url = "http://".TEST_PAY_URL.":".TEST_PAY_PORT.TEST_PAY_DIR;
+        $url = "https://".TEST_PAY_URL.TEST_PAY_DIR;
     }else{
         $url = "https://".PROD_PAY_URL.PROD_PAY_DIR;
     }
