@@ -3,7 +3,5 @@ description = UBC ePayment/CBM transaction payment module
 package = Commerce (contrib)
 dependencies[] = commerce
 dependencies[] = commerce_payment
-dependencies[] = simpletest
 
-files[] = commerce_ubc_cbm_production.test
 core = 7.x
