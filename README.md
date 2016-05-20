@@ -16,7 +16,7 @@ UBC IT Web Services at http://it.ubc.ca/services/web-servers-storage/websites
 ## A: Installation
 ------------------------------------
 1. Edit commerce-ubc-cbm.module constants to be CBM server domains and URI paths.
-  * Server URL and paths can be found at https://eypayment.it.ubc.ca/developers.
+  * Server URL and paths can be found at https://epayment.it.ubc.ca/developers.
 2. FTP commerce_ubc_cbm directory into modules folder.
 3. Navigate to admin/modules.
 4. Enable Commerce_ubc_cbm, which can be found in Commerce (contrib) package.
