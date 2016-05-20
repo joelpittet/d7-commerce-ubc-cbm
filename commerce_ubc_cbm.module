@@ -112,7 +112,7 @@ function commerce_ubc_cbm_menu() {
 function commerce_ubc_cbm_help($path, $arg) {
   switch ($path) {
     case 'admin/help#commerce_ubc_cbm':
-      $output = file_get_contents(drupal_get_path('module', 'commerce_ubc_cbm') .'/README.txt');
+      $output = file_get_contents(drupal_get_path('module', 'commerce_ubc_cbm') .'/README.md');
       return module_exists('markdown') ? filter_xss_admin(module_invoke('markdown', 'filter', 'process', 0, -1, $output)) : '<pre>'. check_plain($output) .'</pre>';
   }
 }
