@@ -1,15 +1,12 @@
 <?php
 
-
-/***
+/**
  * @file
  *  Handle UBC CBM payments
  *  Developed by: UBC IT Web Services, Valerie
  *  August 2012
  *
- *****/
-
-/** constants **/
+ */
 
 define('TICKET_SUCCESSFUL', '100');
 define('MASTER_TICKET_ERROR', '202');
@@ -18,7 +15,7 @@ define('STATUS_SUCCESS', '0');
 define('STATUS_DECLINE', '5');
 define('STATUS_FAIL', '99');
 
-/***
+/**
  *  NOTE! -- Update URL and DIR constants marked with *** to real server values.
  *  Server URL information can be found at https://epayment.it.ubc.ca/developers
  */
@@ -50,14 +47,14 @@ define('COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD', 'commerce_ubc_cbm_gl_account');
  * CONTINUE_URL = url to return to when trans-complete supplied to payment server
  * NOTIFY_URL = url where server is to send notification request
  * CBM_ID = unique identifier sent by server in notification/continuation request (needed in notification response)
- * MERCHANT_ID = merchant transaction id as returned in notification/continueation request (needed in notification response)
- **/
-
+ * MERCHANT_ID = merchant transaction id as returned in notification/continuation request (needed in notification response)
+ */
 
 /**
- * Implements hook_commerce_payment_method_info(). Primary payment method identification information.
+ * Implements hook_commerce_payment_method_info().
  */
 function commerce_ubc_cbm_commerce_payment_method_info() {
+  //  Primary payment method identification information.
   $payment_methods = array();
 
   $payment_methods['commerce_ubc_cbm'] = array(
@@ -75,8 +72,8 @@ function commerce_ubc_cbm_commerce_payment_method_info() {
   return $payment_methods;
 }
 
-/*
- *  Set Permissions
+/**
+ * Implements hook_permission().
  */
 function commerce_ubc_cbm_permission() {
   return array(
@@ -88,8 +85,8 @@ function commerce_ubc_cbm_permission() {
 
 }
 
-/*
- *  Set endpoints
+/**
+ * Implements hook_menu().
  */
 function commerce_ubc_cbm_menu() {
 
@@ -116,10 +113,9 @@ function commerce_ubc_cbm_help($path, $arg) {
   }
 }
 
-
 /**
  * Returns the default settings for the UBC CBM payment method.
- ***/
+ */
 function commerce_ubc_cbm_default_settings() {
   $default_currency = variable_get('commerce_default_currency', 'CAD');
   $settings = array(
@@ -165,7 +161,7 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
     '#title' => t('Merchant ID'),
     '#size' => 60,
     '#default_value' => $settings['cbm_merchant']['cbm_merchant_id'],
-    '#description' => t('The merhcant ID assigned by SIS and ePayment systems.'),
+    '#description' => t('The merchant ID assigned by SIS and ePayment systems.'),
     '#required' => TRUE,
   );
   $form['cbm_merchant']['cbm_user_id'] = array(
@@ -200,7 +196,7 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
   $form['cbm_debugging']['test_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Testing Mode'),
-    '#description' => t('Handle payment transations using CBM testing servers only. Uncheck for live production payment transactions.'),
+    '#description' => t('Handle payment transactions using CBM testing servers only. Uncheck for live production payment transactions.'),
     '#default_value' => $settings['cbm_debugging']['test_mode'],
   );
   /* for now logging everything by default, may want to add this control later.
@@ -220,12 +216,11 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
 }
 
 /**
- * Functions related to turning module on and off
+ * Implements hook_enable().
  */
 function commerce_ubc_cbm_enable() {
   // Add GL Account field to billing profile type.
   commerce_ubc_cbm_add_account_field();
-
 
   // Tell user a new field has been added.
   $message_text = 'Commerce UBC CBM added a new field to "product types" for selecting CBM GL Account to use for individual products. ' . 'If you already have this enabled, you should !disablelink now to avoid ' . 'confusion managing products and payment accounts.';
@@ -238,6 +233,9 @@ function commerce_ubc_cbm_enable() {
 
 }
 
+/**
+ * Implements hook_disable().
+ */
 function commerce_ubc_cbm_disable() {
   // need a more robust way to handle this, but doesn't seem to be API to disable payment method rule
   //$qry = "UPDATE {rules_config} SET active=0 WHERE name='commerce_payment_commerce_ubc_cbm'";
@@ -248,7 +246,8 @@ function commerce_ubc_cbm_disable() {
 }
 
 /**
- *  Called when module enabled, adds a CBM GL Account field to product types, to be able to assign product sales to be tied to specific accounts.
+ * Called when module enabled, adds a CBM GL Account field to product types,
+ * to be able to assign product sales to be tied to specific accounts.
  */
 function commerce_ubc_cbm_add_account_field() {
 
@@ -330,7 +329,7 @@ function ommerce_ubc_cbm_submit_form($payment_method, $pane_values, $checkout_pa
  * Payment method callback; generation callback for the payment redirect form.
  *
  * Returns form elements that should be submitted to the redirected payment
- * service; because of the array merge that happens upon return, the service�s
+ * service; because of the array merge that happens upon return, the service's
  * URL that should receive the POST variables should be set in the #action
  * property of the returned form array.
  */
@@ -364,6 +363,9 @@ function commerce_ubc_cbm_redirect_form($form, &$form_state, $order, $payment_me
   return commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_method);
 }
 
+/**
+ * Implements hook_form_validate().
+ */
 function commerce_ubc_cbm_redirect_form_validate($order, $payment_method) {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['STATUS_CODE'])) {
@@ -386,7 +388,7 @@ function commerce_ubc_cbm_redirect_form_validate($order, $payment_method) {
  * CHECK if this is a repeat showing due to transaction failure
  * check if transaction exists -- don't just try to initiate one
  * see if can make it use the revision table more... not initiating over and over might fix that....
- **/
+ */
 function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_method) {
   global $base_url;
 
@@ -395,10 +397,8 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
   $server = 'payment';
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
-
   $charge['currency_code'] = $order_wrapper->commerce_order_total->currency_code->value();
   $charge['amount'] = $order_wrapper->commerce_order_total->amount->value();
-
 
   if (!$charge['amount']) {
     drupal_set_message(t('UBC ePayment is not configured for use. No charge set up.'), 'error');
@@ -409,7 +409,6 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
     initTransaction($payment_method, $charge, $order);
     $transaction = getTransactionByPropery('order_id', $order->order_id);
   }
-
 
   // 2. get new transaction (with id)
   if ($transaction) {
@@ -423,8 +422,7 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
       return array();
     }
 
-
-    // 5 prepare payment request as name-value-pair array
+    // 3.5 prepare payment request as name-value-pair array
     $nvp = array(
       'SRCE_TYP_CD' => $settings['cbm_merchant']['cbm_merchant_id'],
       'TICKET' => $ticket,
@@ -446,10 +444,9 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
         $nvp['TRAN_AMOUNT' . $i] = $amount / 100;
         $i++;
       }
-
     }
 
-    // 5 update tranaction with payload information
+    // 5 update transaction with payload information
     $now = date("Y-m-d H:i:s", time());
     $transaction->payload[$now] = array('payment_request' => $nvp);
     $transaction->status = COMMERCE_PAYMENT_STATUS_PENDING;
@@ -489,9 +486,8 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
 }
 
 /**
- * Payment request/response fucntions
- *
- * */
+ * Payment request/response functions
+ */
 function initTransaction($payment_method, $charge, $order) {
   $transaction = commerce_payment_transaction_new('commerce_ubc_cbm', $order->order_id);
   $transaction->instance_id = $payment_method['instance_id'];
@@ -500,7 +496,9 @@ function initTransaction($payment_method, $charge, $order) {
   commerce_payment_transaction_save($transaction);
 }
 
-// Get a transaction entity by one of it's property fields, e.g. order_id
+/**
+ * Get a transaction entity by one of it's property fields, e.g. order_id
+ */
 function getTransactionByPropery($property, $value) {
   $type = 'commerce_payment_transaction';
   $qry = new EntityFieldQuery();
@@ -554,7 +552,6 @@ function buildPaymentURL($settings) {
   return $url;
 }
 
-
 function getServerConnection($server, $isDev) {
   if ($server == 'auth') {
     if ($isDev) {
@@ -591,7 +588,9 @@ function getServerConnection($server, $isDev) {
   return $conn;
 }
 
-// Load the incomming POST request from server
+/**
+ * Load the incoming POST request from server
+ */
 function loadRequest() {
 
   $postedXML = $_POST['xml_details'];
@@ -599,7 +598,9 @@ function loadRequest() {
   return $xmlArray;
 }
 
-// Listener to process incoming Payment Service Notification requests
+/**
+ * Listener to process incoming Payment Service Notification requests
+ */
 function processNotificationRequest() {
 
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -668,7 +669,9 @@ function buildNotificationXML($cbm_id, $trans_id, $status) {
   return $xml;
 }
 
-//  process incoming Payment Service Continuation requests
+/**
+ * Process incoming Payment Service Continuation requests
+ */
 function commerce_ubc_cbm_redirect_form_submit() {
 
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -701,13 +704,9 @@ function commerce_ubc_cbm_redirect_form_submit() {
       $transaction->payload[$now] = $_POST;
       $transaction->status = $status;
       commerce_payment_transaction_save($transaction);
-
     }
-
   }
-
 }
-
 
 function sendNotificationResponse($settings, $postData) {
   $fp = connectPaymentServer($settings);
@@ -772,11 +771,9 @@ function buildPayHeader($postString, $isDev = FALSE) {
   return $out;
 }
 
-
 /**
- *  Authentication request/response fucntions
- *
- **/
+ * Authentication request/response functions
+ */
 function requestSessionTicket($settings) {
 
   $master_ticket = requestMasterTicket($settings);
@@ -838,7 +835,9 @@ function requestMasterTicket($settings) {
 }
 
 
-/** General function to send post and receive response from Authentication Server **/
+/**
+ * General function to send post and receive response from Authentication Server
+ */
 function sendAuthRequest($settings, $postData) {
   $fp = connectAuthenticationServer($settings);
   if ($fp) {
@@ -850,7 +849,6 @@ function sendAuthRequest($settings, $postData) {
   }
   return FALSE;
 }
-
 
 function connectAuthenticationServer($settings) {
   if ($settings['cbm_debugging']['test_mode']) {
@@ -883,7 +881,6 @@ function connectAuthenticationServer($settings) {
     return $fp;
   }
 }
-
 
 function buildPostString($postData) {
   $poststring = "";
@@ -946,10 +943,12 @@ function _extractParam($data, $xmlFieldNames) {
     }
   }
   return $parsedXML;
-} // end _extractParam
+}
 
-
-/** only using these 2 for test for now... but should probably employ as bit more robust xml handling than _extractParam **/
+/**
+ * only using these 2 for test for now... but should probably employ as bit more
+ * robust xml handling than _extractParam
+ */
 function extractXML($data) {
   $xmlstart = "<?xml";
   if (strpos($data, $xmlstart)) {
@@ -961,90 +960,3 @@ function extractXML($data) {
 function convertXMLToArray($xml) {
   return json_decode(json_encode((array) simplexml_load_string($xml)), 1);
 }
-
-
-
-/**
- * Payment method callback; validate callback for the payment submission form.
- *
- * @param $payment_method
- *   An array of the current settings.
- * @param $pane_form
- *   The pane form.
- * @param $pane_values
- *   The current values of the pane.
- * @param $order
- *   The order object.
- * @param $form_parents
- *   The identifier of the base element of the payment pane.
- */
-//function commerce_ubc_cbm_submit_form_validate($payment_method, $pane_form, $pane_values, $order, $form_parents = array()) {
-
-//}
-
-
-/**
- * Payment method callback; validate callback for the payment submission form.
- *
- * @param $payment_method
- *   An array of the current settings.
- * @param $pane_values
- *   The current values of the pane.
- * @param $checkout_pane
- *   The checkout pane array.
- * @param $order
- *   The order object.
- * @param $charge
- *   A price structure that needs to be charged.
- *
- * function commerce_ubc_cbm_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
- * global $base_url;
- *
- * $settings = $payment_method['settings'];
- * $server = 'payment';
- * $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
- *
- * // 1. create and save transaction to get id
- * initTransaction($payment_method, $charge, $order);
- *
- * // 2. get new transaction (with id)
- * if($transaction = getTransactionByPropery('order_id', $order->order_id)){
- * $transaction->revision = TRUE;
- * // 3. get Session ticket
- * $ticket = requestSessionTicket($settings);
- *
- * // 5 prepare payment request as name-value-pair array
- * $nvp = array(
- * 'SRCE_TYP_CD'=>$settings['cbm_merchant_id'],
- * 'TICKET'=>$ticket,
- * 'TRAN_AMOUNT'=>$charge['amount'],
- * 'MERCHANT_TRANS_ID'=>$transaction->transaction_id,
- * 'CONTINUE_URL'=>$base_url.'/ubc_paymemt/continuation',
- * 'NOTIFY_URL'=>$base_url.'/ubc_payment/notification'
- * );
- *
- * // 4. Figure out gl_account amounts if any
- * $gl_accounts = getGLAccountAmounts($order);
- * if(count($gl_accounts) > 0){
- * $nvp['GL_AMOUNT_COUNT'] = count($gl_accounts);
- * $i = 1;
- * foreach ($gl_accounts as $account=>$amount){
- * $nvp['GL_ACCT_CD'.$i] = $account;
- * $nvp['TRAN_AMOUNT'.$i] = $amount;
- * }
- * }
- *
- * // 6 update tranaction with payload information
- * $now = time();
- * $transaction->payload[$now] = $nvp;
- * $transaction->status = COMMERCE_PAYMENT_STATUS_PENDING;
- *
- * // Save the transaction information.
- * commerce_payment_transaction_save($transaction);
- *
- * // 7 send payment request via cURL
- * sendCurlRequest($server, buildPostString($nvp), $settings['test_mode']);
- * }
- * }
- */
-
