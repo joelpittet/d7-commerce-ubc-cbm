@@ -17,24 +17,35 @@ define('STATUS_SUCCESS', '0');
 define('STATUS_DECLINE', '5');
 define('STATUS_FAIL', '99');
 
-/***
- *  NOTE! -- Update URL and DIR constants marked with *** to real server values.
- *  Server URL information can be found at https://epayment.it.ubc.ca/developers
+/**
+ * @TODO Double check that these values haven't changed, consider making
+ * these variables?
+ * Server URL information can be found at https://epayment.it.ubc.ca/developers
  */
-define('TEST_AUTH_URL', 'change.this.ubc.ca'); //*** test authentication server domain
-define('TEST_AUTH_DIR', '/change/this'); //*** test authentication server URI path
-define('TEST_PAY_URL', 'change.this.ubc.ca'); //*** test payment server domain
-define('TEST_PAY_DIR', '/change/this'); //*** test payment server URI path
-define('PROD_AUTH_URL', 'change.this.ubc.ca'); //*** production authentication server domain
-define('PROD_AUTH_DIR', '/change/this'); //*** test authentication server URI path
-define('PROD_PAY_URL', 'change.this.ubc.ca'); //*** production payment server domain
-define('PROD_PAY_DIR', '/change/this'); //*** production payment server URI path
-// end of required constants to update
 
-define('PROD_AUTH_PORT', '443');
+// Test environment.
+// Authentication server domain.
+define('TEST_AUTH_URL', 'servicestest.as.it.ubc.ca');
 define('TEST_AUTH_PORT', '8301');
+// Authentication server URI path.
+define('TEST_AUTH_DIR', '/authServer/authenticate');
+// Payment server domain.
+define('TEST_PAY_URL', 'verf.cbm.adm.ubc.ca');
+// Payment server URI path.
+define('TEST_PAY_DIR', '/creditcardservice/CreditCardPaymentForm');
 define('TEST_PAY_PORT', '');
+
+// Production environment.
+// Authentication server domain.
+define('PROD_AUTH_URL', 'ssc.adm.ubc.ca');
+define('PROD_AUTH_PORT', '443');
+// Authentication server URI path.
+define('PROD_AUTH_DIR', '/authServer/authenticate');
+// Payment server domain.
+define('PROD_PAY_URL', 'cbm.adm.ubc.ca');
 define('PROD_PAY_PORT', '');
+// Payment server URI path.
+define('PROD_PAY_DIR', '/creditcardservice/CreditCardPaymentForm');
 
 define('MASTER_TICKET_ERROR_MSG', 'UBC ePayment gateway is unavailable at this time');
 define('SESSION_TICKET_ERROR_MSG', 'Attempt to connect with UBC ePayment gateway failed.');
