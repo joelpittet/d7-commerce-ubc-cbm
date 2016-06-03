@@ -282,7 +282,9 @@ function commerce_ubc_cbm_add_account_field() {
         'widget' => array(
           'type' => 'list_text',
         ),
-        'settings' => array(),
+        'settings' => array(
+          'text_processing' => FALSE,
+        ),
         'display' => array(),
       );
 
