@@ -34,11 +34,6 @@ define('TEST_AUTH_PORT', '8301');
 define('TEST_PAY_PORT', '');
 define('PROD_PAY_PORT', '');
 
-define('MASTER_TICKET_ERROR_MSG', 'UBC ePayment gateway is unavailable at this time');
-define('SESSION_TICKET_ERROR_MSG', 'Attempt to connect with UBC ePayment gateway failed.');
-
-define('COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD', 'commerce_ubc_cbm_gl_account');
-
 /** server param labels
  *
  * SRCE_TYP_CD = merchant_id  or merchant_user_id ?? not sure says 'identifier of user', but later says merchant_id as sent to server...
@@ -295,11 +290,11 @@ function commerce_ubc_cbm_disable() {
 function commerce_ubc_cbm_add_account_field() {
 
   // Look for or add a GL Account list field to add to product
-  $field = field_info_field(COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD);
+  $field = field_info_field('commerce_ubc_cbm_gl_account');
 
   if (empty($field)) {
     $field = array(
-      'field_name' => COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD,
+      'field_name' => 'commerce_ubc_cbm_gl_account',
       'type' => 'list_text',
       'cardinality' => 1,
       'entity_types' => array('commerce_product'),
@@ -313,11 +308,11 @@ function commerce_ubc_cbm_add_account_field() {
 
   $product_types = commerce_product_types();
   foreach ($product_types as $key => $v) {
-    $instance = field_info_instance('commerce_product', COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD, $key);
+    $instance = field_info_instance('commerce_product', 'commerce_ubc_cbm_gl_account', $key);
 
     if (empty($instance)) {
       $instance = array(
-        'field_name' => COMMERCE_UBC_CBM_GL_ACCOUNT_FIELD,
+        'field_name' => 'commerce_ubc_cbm_gl_account',
         'entity_type' => 'commerce_product',
         'bundle' => $key,
         'label' => t('CBM GL Account'),
