@@ -63,7 +63,6 @@ function commerce_ubc_cbm_commerce_payment_method_info() {
     'offsite' => TRUE,
     'offsite_autoredirect' => TRUE,
     'callbacks' => array(
-      'submit_form' => 'commerce_ubc_cbm_submit_form',
       'settings_form' => 'commerce_ubc_cbm_settings_form',
       'redirect_form' => 'commerce_ubc_cbm_redirect_form',
     ),
@@ -262,7 +261,7 @@ function commerce_ubc_cbm_add_account_field() {
       'entity_types' => array('commerce_product'),
       'translatable' => FALSE,
       'locked' => FALSE,
-      'settings' => array('allowed_values' => get_account_list_array('default|Default Account')),
+      'settings' => array('allowed_values' => getAccountListArray('default|Default Account')),
     );
 
     $field = field_create_field($field);
@@ -300,30 +299,6 @@ function commerce_ubc_cbm_add_account_field() {
       $new_instance = field_create_instance($instance);
     }
   }
-
-}
-
-function get_account_list_array($list) {
-  $new = array();
-  $lines = explode('\n', $list);
-  foreach ($lines as $pair) {
-    $values = explode('|', $pair);
-    $new[$values[0]] = $values[1];
-  }
-  return $new;
-}
-
-/**
- * Payment method callback: submit form.
- */
-function ommerce_ubc_cbm_submit_form($payment_method, $pane_values, $checkout_pane, $order) {
-
-  // Merge in values from the order.
-  if (!empty($order->data['commerce_ubc_cbm'])) {
-    $pane_values += $order->data['commerce_ubc_cbm'];
-  }
-
-  return $form;
 
 }
 
@@ -542,6 +517,16 @@ function getGLAccountAmounts($order, $settings) {
   }
 
   return $accounts;
+}
+
+function getAccountListArray($list) {
+  $new = array();
+  $lines = explode('\n', $list);
+  foreach ($lines as $pair) {
+    $values = explode('|', $pair);
+    $new[$values[0]] = $values[1];
+  }
+  return $new;
 }
 
 function buildPaymentURL($settings) {
@@ -787,7 +772,7 @@ function requestSessionTicket($settings) {
     );
     if ($response = sendAuthRequest($settings, $postData)) {
       $xmlFieldArray = array("response-code", "auth-ticket");
-      if ($parsedXML = _extractParam($response, $xmlFieldArray)) {
+      if ($parsedXML = extractParam($response, $xmlFieldArray)) {
         if (isset($parsedXML['auth-ticket'])) {
           return $parsedXML['auth-ticket'];
         }
@@ -817,7 +802,7 @@ function requestMasterTicket($settings) {
   if ($response = sendAuthRequest($settings, $postData)) {
 
     $xmlFieldArray = array("response-code", "auth-ticket");
-    if ($parsedXML = _extractParam($response, $xmlFieldArray)) {
+    if ($parsedXML = extractParam($response, $xmlFieldArray)) {
       if (isset($parsedXML['auth-ticket'])) {
         return $parsedXML['auth-ticket'];
       }
@@ -927,7 +912,7 @@ function sendPost($fp, $post) {
   return $result;
 }
 
-function _extractParam($data, $xmlFieldNames) {
+function extractParam($data, $xmlFieldNames) {
   /* Extract the xml fields from an XML stream */
   foreach ($xmlFieldNames as $xmlField) {
     if (strpos($data, $xmlField) !== FALSE) {
@@ -949,7 +934,7 @@ function _extractParam($data, $xmlFieldNames) {
 
 /**
  * only using these 2 for test for now... but should probably employ as bit more
- * robust xml handling than _extractParam
+ * robust xml handling than extractParam
  */
 function extractXML($data) {
   $xmlstart = "<?xml";
