@@ -1,7 +1,9 @@
 name = UBC CBM Payment
 description = UBC ePayment/CBM transaction payment module
-package = Commerce (contrib)
+core = 7.x
+version = 7.x-1.x-dev
+package = UBC IT Web Services
 dependencies[] = commerce
 dependencies[] = commerce_payment
-
-core = 7.x
+dependencies[] = commerce_product
+dependencies[] = rules
