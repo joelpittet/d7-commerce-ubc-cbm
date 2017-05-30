@@ -123,9 +123,13 @@ function commerce_ubc_cbm_default_settings() {
       'cbm_user_id' => '',
       'cbm_user_cred' => '',
       'cbm_default_fms' => '',
+      'cbm_prod_auth_url' => '',
+      'cbm_prod_pay_url' => '',
     ),
     'cbm_debugging' => array(
       'test_mode' => 1,
+      'cbm_test_auth_url' => '',
+      'cbm_test_pay_url' => '',
       //'log' => array('request' => 0, 'response' => 0),
     ),
   );
@@ -179,6 +183,22 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
     '#description' => t('The merchant password provided by SIS/ePayment to use for authentication to submit payment transaction.'),
     '#required' => TRUE,
   );
+  $form['cbm_merchant']['cbm_prod_auth_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Authentication Server'),
+    '#size' => 60,
+    '#default_value' => $settings['cbm_merchant']['cbm_prod_auth_url'],
+    '#description' => t('The authentication server URL for production.'),
+    '#required' => TRUE,
+  );
+  $form['cbm_merchant']['cbm_prod_pay_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('ePayment Web Service'),
+    '#size' => 60,
+    '#default_value' => $settings['cbm_merchant']['cbm_prod_pay_url'],
+    '#description' => t('The ePayment Web Service URL for production.'),
+    '#required' => TRUE,
+  );
   $form['cbm_merchant']['cbm_default_fms'] = array(
     '#type' => 'textfield',
     '#title' => t('Default UBC FMS Account'),
@@ -197,6 +217,30 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
     '#title' => t('Testing Mode'),
     '#description' => t('Handle payment transactions using CBM testing servers only. Uncheck for live production payment transactions.'),
     '#default_value' => $settings['cbm_debugging']['test_mode'],
+  );
+  $form['cbm_debugging']['cbm_test_auth_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Authentication Server (Testing)'),
+    '#size' => 60,
+    '#default_value' => $settings['cbm_debugging']['cbm_test_auth_url'],
+    '#description' => t('The authentication server URL for testing.'),
+    '#states' => array(
+      'enabled' => array(
+        ':input[name="parameter[payment_method][settings][payment_method][settings][cbm_debugging][test_mode]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+  $form['cbm_debugging']['cbm_test_pay_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('ePayment Web Service (Testing)'),
+    '#size' => 60,
+    '#default_value' => $settings['cbm_debugging']['cbm_test_pay_url'],
+    '#description' => t('The ePayment Web Service URL for testing'),
+    '#states' => array(
+      'enabled' => array(
+        ':input[name="parameter[payment_method][settings][payment_method][settings][cbm_debugging][test_mode]"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   /* for now logging everything by default, may want to add this control later.
    $form['cbm_debugging']['log'] = array(
