@@ -2,39 +2,11 @@
 
 /**
  * @file
- *  Handle UBC CBM payments
- *  Developed by: UBC IT Web Services, Valerie
- *  August 2012
  *
- */
-
-define('TICKET_SUCCESSFUL', '100');
-define('MASTER_TICKET_ERROR', '202');
-define('SESSION_TICKET_ERROR', '200');
-define('STATUS_SUCCESS', '0');
-define('STATUS_DECLINE', '5');
-define('STATUS_FAIL', '99');
-
-/**
- *  NOTE! -- Update URL and DIR constants marked with *** to real server values.
- *  Server URL information can be found at https://epayment.it.ubc.ca/developers
- */
-define('TEST_AUTH_URL', 'change.this.ubc.ca'); //*** test authentication server domain
-define('TEST_AUTH_DIR', '/change/this'); //*** test authentication server URI path
-define('TEST_PAY_URL', 'change.this.ubc.ca'); //*** test payment server domain
-define('TEST_PAY_DIR', '/change/this'); //*** test payment server URI path
-define('PROD_AUTH_URL', 'change.this.ubc.ca'); //*** production authentication server domain
-define('PROD_AUTH_DIR', '/change/this'); //*** test authentication server URI path
-define('PROD_PAY_URL', 'change.this.ubc.ca'); //*** production payment server domain
-define('PROD_PAY_DIR', '/change/this'); //*** production payment server URI path
-// end of required constants to update
-
-define('PROD_AUTH_PORT', '443');
-define('TEST_AUTH_PORT', '8301');
-define('TEST_PAY_PORT', '');
-define('PROD_PAY_PORT', '');
-
-/** server param labels
+ * A module that provides a payment method for Drupal Commerce that works
+ * with UBC's ePayment web service.
+ *
+ * More information can be found at https://epayment.it.ubc.ca/developers
  *
  * SRCE_TYP_CD = merchant_id  or merchant_user_id ?? not sure says 'identifier of user', but later says merchant_id as sent to server...
  * TICKET = session ticket
@@ -44,6 +16,13 @@ define('PROD_PAY_PORT', '');
  * CBM_ID = unique identifier sent by server in notification/continuation request (needed in notification response)
  * MERCHANT_ID = merchant transaction id as returned in notification/continuation request (needed in notification response)
  */
+
+define('TICKET_SUCCESSFUL', '100');
+define('MASTER_TICKET_ERROR', '202');
+define('SESSION_TICKET_ERROR', '200');
+define('STATUS_SUCCESS', '0');
+define('STATUS_DECLINE', '5');
+define('STATUS_FAIL', '99');
 
 /**
  * Implements hook_commerce_payment_method_info().
@@ -56,7 +35,8 @@ function commerce_ubc_cbm_commerce_payment_method_info() {
     'title' => t('UBC ePayment'),
     'description' => t('UBC online transaction payment gateway'),
     'offsite' => TRUE,
-    'offsite_autoredirect' => TRUE,
+    // TODO renable for production
+    'offsite_autoredirect' => FALSE,
     'callbacks' => array(
       'settings_form' => 'commerce_ubc_cbm_settings_form',
       'redirect_form' => 'commerce_ubc_cbm_redirect_form',
@@ -569,49 +549,14 @@ function getAccountListArray($list) {
 }
 
 function buildPaymentURL($settings) {
-  if ($settings['cbm_debugging']['test_mode'] == 1) {
-    $url = "https://" . TEST_PAY_URL . TEST_PAY_DIR;
+  if ($settings['cbm_debugging']['test_mode']) {
+    $url = $settings['cbm_debugging']['cbm_test_pay_url'];
   }
   else {
-    $url = "https://" . PROD_PAY_URL . PROD_PAY_DIR;
+    $url = $settings['cbm_merchant']['cbm_prod_pay_url'];
   }
-  return $url;
-}
 
-function getServerConnection($server, $isDev) {
-  if ($server == 'auth') {
-    if ($isDev) {
-      $conn = array(
-        'URL' => TEST_AUTH_URL,
-        'DIR' => TEST_AUTH_DIR,
-        'PORT' => TEST_AUTH_PORT,
-      );
-    }
-    else {
-      $conn = array(
-        'URL' => PROD_AUTH_URL,
-        'DIR' => PROD_AUTH_DIR,
-        'PORT' => PROD_AUTH_PORT,
-      );
-    }
-  }
-  else {
-    if ($isDev) {
-      $conn = array(
-        'URL' => TEST_PAY_URL,
-        'DIR' => TEST_PAY_DIR,
-        'PORT' => TEST_PAY_PORT,
-      );
-    }
-    else {
-      $conn = array(
-        'URL' => PROD_PAY_URL,
-        'DIR' => PROD_PAY_DIR,
-        'PORT' => PROD_PAY_PORT,
-      );
-    }
-  }
-  return $conn;
+  return $url;
 }
 
 /**
@@ -734,69 +679,6 @@ function commerce_ubc_cbm_redirect_form_submit() {
   }
 }
 
-function sendNotificationResponse($settings, $postData) {
-  $fp = connectPaymentServer($settings);
-  if ($fp) {
-    //$postString = buildPostString($postData);
-    // $header = buildPayHeader($postString, $settings['cbm_debugging']['test_mode']);
-    $response = sendPost($fp, $postData);
-    fclose($fp);
-    return $response;
-  }
-  return FALSE;
-}
-
-function connectPaymentServer($isDev) {
-  if ($isDev) {
-    $pay = array(
-      'URL' => TEST_PAY_URL,
-      'DIR' => TEST_PAY_DIR,
-      'PORT' => TEST_PAY_PORT,
-    );
-  }
-  else {
-    $pay = array(
-      'URL' => PROD_PAY_URL,
-      'DIR' => PROD_PAY_DIR,
-      'PORT' => PROD_PAY_PORT,
-    );
-  }
-
-  $fp = fsockopen($pay['URL'], $pay['PORT'], $errno, $errstr, 30);
-  if (!$fp) {
-    watchdog('commerce_ubc_cbm', 'Failed opening socket to payment server: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($errstr, TRUE)) . check_plain(print_r($pay, TRUE)) . '</pre>',
-      WATCHDOG_ERROR
-    ));
-    return FALSE;
-  }
-  else {
-    return $fp;
-  }
-}
-
-function buildPayHeader($postString, $isDev = FALSE) {
-
-  if ($isDev) {
-    $url = TEST_PAY_URL;
-    $dir = TEST_PAY_DIR;
-    $port = TEST_PAY_PORT;
-  }
-  else {
-    $url = PROD_PAY_URL;
-    $dir = PROD_PAY_DIR;
-    $port = PROD_PAY_PORT;
-  }
-
-  $out = "POST " . $dir . " HTTP/1.1\r\n";
-  $out .= "Host: " . $url . ":" . $port . "\r\n";
-  $out .= "Content-Type: text/xml\r\n";
-  $out .= "Content-Length: " . strlen($postString) . "\r\n";
-  $out .= "Connection: Close\r\n\r\n";
-
-  return $out;
-}
-
 /**
  * Authentication request/response functions
  */
@@ -865,37 +747,38 @@ function requestMasterTicket($settings) {
  * General function to send post and receive response from Authentication Server
  */
 function sendAuthRequest($settings, $postData) {
+
   $fp = connectAuthenticationServer($settings);
+
   if ($fp) {
     $postString = buildPostString($postData);
-    $header = buildPostHeader($postString, $settings['cbm_debugging']['test_mode']);
+    $header = buildPostHeader($postString, $settings);
     $response = sendPost($fp, $header . $postString);
+
     fclose($fp);
+
     return $response;
   }
+
   return FALSE;
 }
 
 function connectAuthenticationServer($settings) {
-  if ($settings['cbm_debugging']['test_mode']) {
-    $mode = 'testing';
-    $auth = array(
-      'URL' => TEST_AUTH_URL,
-      'DIR' => TEST_AUTH_DIR,
-      'PORT' => TEST_AUTH_PORT,
-    );
 
+  if ($settings['cbm_debugging']['test_mode']) {
+    drupal_set_message(t('UBC ePayment module is in TESTING mode.'), 'warning');
+    $auth = parse_url($settings['cbm_debugging']['cbm_test_auth_url']);
   }
   else {
-    $mode = 'production';
-    $auth = array(
-      'URL' => "ssl://" . PROD_AUTH_URL,
-      'DIR' => PROD_AUTH_DIR,
-      'PORT' => PROD_AUTH_PORT,
-    );
+    $auth = parse_url($settings['cbm_merchant']['cbm_prod_auth_url']);
   }
 
-  $fp = fsockopen($auth['URL'], $auth['PORT'], $errno, $errstr, 30);
+  if (empty($auth['port'])) {
+    $auth['port'] = ($auth['scheme'] === 'https') ? 443 : 80;
+  }
+
+  $fp = fsockopen("ssl://".$auth['host'], $auth['port'], $errno, $errstr, 30);
+
   if (!$fp) {
     watchdog('commerce_ubc_cbm', 'Failed opening socket to authentication server!param', array(
       '!param' => '<pre>' . check_plain(print_r($errstr, TRUE)) . check_plain(print_r($auth, TRUE)) . '</pre>',
@@ -917,21 +800,21 @@ function buildPostString($postData) {
   return $poststring;
 }
 
-function buildPostHeader($postString, $isDev = FALSE) {
+function buildPostHeader($postString, $settings) {
 
-  if ($isDev) {
-    $url = TEST_AUTH_URL;
-    $dir = TEST_AUTH_DIR;
-    $port = TEST_AUTH_PORT;
+  if ($settings['cbm_debugging']['test_mode']) {
+    $auth = parse_url($settings['cbm_debugging']['cbm_test_auth_url']);
   }
   else {
-    $url = PROD_AUTH_URL;
-    $dir = PROD_AUTH_DIR;
-    $port = PROD_AUTH_PORT;
+    $auth = parse_url($settings['cbm_merchant']['cbm_prod_auth_url']);
   }
 
-  $out = "POST " . $dir . " HTTP/1.1\r\n";
-  $out .= "Host: " . $url . ":" . $port . "\r\n";
+  if (empty($auth['port'])) {
+    $auth['port'] = ($auth['scheme'] === 'https') ? 443 : 80;
+  }
+
+  $out = "POST " . $auth['path'] . " HTTP/1.1\r\n";
+  $out .= "Host: " . $auth['host'] . ":" . $auth['port'] . "\r\n";
   $out .= "Content-Type: application/x-www-form-urlencoded\r\n";
   $out .= "Content-Length: " . strlen($postString) . "\r\n";
   $out .= "Connection: Close\r\n\r\n";
