@@ -15,12 +15,9 @@ UBC IT Web Services at http://it.ubc.ca/services/web-servers-storage/websites
 
 ## A: Installation
 ------------------------------------
-1. Edit commerce-ubc-cbm.module constants to be CBM server domains and URI paths.
-  * Server URL and paths can be found at https://epayment.it.ubc.ca/developers.
-2. FTP commerce_ubc_cbm directory into modules folder.
-3. Navigate to admin/modules.
-4. Enable Commerce_ubc_cbm, which can be found in Commerce (contrib) package.
-
+1. Add this module to your Drupal installation modules folder. 
+2. Navigate to admin/modules.
+3. Enable commerce_ubc_cbm, which can be found in UBC IT Web Services package.
 
 ## Configuration
 ------------------------------------
@@ -30,7 +27,8 @@ UBC IT Web Services at http://it.ubc.ca/services/web-servers-storage/websites
 2. Enable UBC ePayment
 3. Select "UBC ePayment" link or "edit" link
 4. Select "Enable payment method: UBC ePayment" or "edit" link in Actions section
-5. Enter merchant account information in Payment Settings section.
+5. Add the Test and Production Auth and Pay URLs in the settings form. The values can be found at https://epayment.it.ubc.ca/developers
+6. Enter merchant account information in Payment Settings section.
   * Merchant ID
   *  Merchant Authentication ID (user name provided by SIS/ePayment used to authenticate access to payment servers)
   * Merchant Authentication Credentials (password provide by SIS/ePayment for access to payment servers)
@@ -47,7 +45,7 @@ UBC IT Web Services at http://it.ubc.ca/services/web-servers-storage/websites
       * Note: if you have only one account you can contact SIS/ePayment and ask that they assign that account to be used as default for all sales
       * See: "Account overriding and splitting" at https://epayment.it.ubc.ca/web-service/accounting-information-and-payment-types
   * check "Testing Mode" to have your transactions handled by the testing servers, uncheck when ready to have purchase handled by production servers
-6. Go to People -> Permissions and check to allow "anonymous user" for "Access UBC CBM Payment"
+7. Go to People -> Permissions and check to allow "anonymous user" for "Access UBC CBM Payment"
 
 ## Applying sales to different FMS accounts
 ----------------------------------------------------------------------------------------
@@ -69,7 +67,7 @@ UBC IT Web Services at http://it.ubc.ca/services/web-servers-storage/websites
 ## Uninstalling
 -------------------------------------
 1. Go to Store -> Configuration -> Payment methods
-2. "Disable" UBC ePayement
+2. "Disable" UBC ePayment
 3. Go to Modules -> Commerce (contrib) and deactivate UBC CBM Payment
 
 Notes regarding disabling the UBC CBM Module
@@ -88,7 +86,7 @@ Notes regarding disabling the UBC CBM Module
 1. Enabled module but payment option not shown as option in configuration for Payment methods.
    Try clearing cache, manually running cron and try again.
 
-2. ePayment Servcer refusing transaction with error that GL_ACCT_CD is missing or invalid
+2. ePayment Server refusing transaction with error that GL_ACCT_CD is missing or invalid
 
   * For store where all sales to go to one UBC Financial Account:
     - go to configuration page (admin/commerce/config/payment-methods) ensure you have provided FMS and it is in the correct format. See section "Configuration" 5.d above.
@@ -116,12 +114,12 @@ Notes regarding disabling the UBC CBM Module
   *  This indicates user permission not set correctly, go to People -> Permissions and check to allow "anonymous user" for "Access UBC CBM Payment"
 
 6. Needing to track payment transaction data
-   * i) For purchases that have completed transactions Go to Store -> Orders -> and select "payment" link for oreder you are interested in.
+   * i) For purchases that have completed transactions Go to Store -> Orders -> and select "payment" link for order you are interested in.
    * ii) For purchases that may have stalled or had other issues that kept payment from completing select "shopping carts" tab and then select "payment" link
    * You should see a table with payment details and status, click "view" link to see more detailed information
    * In payload section are all details related to payment transaction communications to and from the ePayment gateway
-     * i) "payment request" is sent from commerce site to ePayement server
-     * ii) "notifciation request" is sent from ePayment server to commerce site
-     * iii) "notification response" is sent from commcerce site to payment server
+     * i) "payment request" is sent from commerce site to ePayment server
+     * ii) "notification request" is sent from ePayment server to commerce site
+     * iii) "notification response" is sent from commerce site to payment server
      * iv) "continuation request" is sent from payment server to commerce site
    * Errors are logged in Reports -> Recent log messages
