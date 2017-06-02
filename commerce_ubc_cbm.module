@@ -777,7 +777,7 @@ function connectAuthenticationServer($settings) {
     $auth['port'] = ($auth['scheme'] === 'https') ? 443 : 80;
   }
 
-  $fp = fsockopen("ssl://".$auth['host'], $auth['port'], $errno, $errstr, 30);
+  $fp = fsockopen("ssl://" . $auth['host'], $auth['port'], $errno, $errstr, 30);
 
   if (!$fp) {
     watchdog('commerce_ubc_cbm', 'Failed opening socket to authentication server!param', array(
