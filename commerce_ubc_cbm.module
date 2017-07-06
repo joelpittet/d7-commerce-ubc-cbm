@@ -400,6 +400,7 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
     drupal_set_message(t('UBC ePayment is not configured for use. No charge set up.'), 'error');
     return array();
   }
+
   // 1. check if transaction exists, if not create and save transaction to get id
   if (!($transaction = getTransactionByPropery('order_id', $order->order_id))) {
     initTransaction($payment_method, $charge, $order);
@@ -441,6 +442,9 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
         $i++;
       }
     }
+
+    // Allow other modules to alter the payment request.
+    drupal_alter('commerce_ubc_cbm_payment_request', $nvp);
 
     // 5 update transaction with payload information
     $now = date("Y-m-d H:i:s", time());
