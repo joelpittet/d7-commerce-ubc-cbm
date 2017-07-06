@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Commerce UBC CBM module.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function commerce_ubc_cbm_enable() {
+  // Add GL Account field to billing profile type.
+  commerce_ubc_cbm_add_account_field();
+
+  // Tell user a new field has been added.
+  $message = t('Commerce UBC CBM added a new field to "product types" for selecting CBM GL Account to use for individual products. If you already have this enabled, you should <a href="@url">disable fields</a> now to avoid confusion managing products and payment accounts.', array('!url' => url('admin/commerce/products/types')));
+  drupal_set_message($message, 'warning');
+  watchdog('commerce_ubc_cbm', 'Commerce UBC CBM payment module enabled: <pre>@param</pre>', array('@param' => print_r($message, TRUE)), WATCHDOG_NOTICE);
+}
+
+/**
+ * Implements hook_disable().
+ */
+function commerce_ubc_cbm_disable() {
+  // @todo Need a more robust way to handle this, but doesn't seem to be API to
+  //   disable payment method rule.
+  db_update('rules_config')
+    ->fields(array('active' => 0))
+    ->condition('name', 'commerce_payment_commerce_ubc_cbm')
+    ->execute();
+}

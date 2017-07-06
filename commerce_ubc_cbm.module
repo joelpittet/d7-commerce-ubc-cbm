@@ -234,36 +234,6 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
 }
 
 /**
- * Implements hook_enable().
- */
-function commerce_ubc_cbm_enable() {
-  // Add GL Account field to billing profile type.
-  commerce_ubc_cbm_add_account_field();
-
-  // Tell user a new field has been added.
-  $message_text = 'Commerce UBC CBM added a new field to "product types" for selecting CBM GL Account to use for individual products. ' . 'If you already have this enabled, you should !disablelink now to avoid ' . 'confusion managing products and payment accounts.';
-  $message = t($message_text, array('!disablelink' => l('disable fields', 'admin/commerce/products/types')));
-  drupal_set_message($message, 'warning');
-  watchdog('commerce_ubc_cbm', 'Commerce UBC CBM payment module enabled: !param', array(
-    '!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>',
-    WATCHDOG_NOTICE
-  ));
-
-}
-
-/**
- * Implements hook_disable().
- */
-function commerce_ubc_cbm_disable() {
-  // need a more robust way to handle this, but doesn't seem to be API to disable payment method rule
-  //$qry = "UPDATE {rules_config} SET active=0 WHERE name='commerce_payment_commerce_ubc_cbm'";
-  $res = db_update('rules_config')
-    ->fields(array('active' => 0))
-    ->condition('name', 'commerce_payment_commerce_ubc_cbm')
-    ->execute();
-}
-
-/**
  * Called when module enabled, adds a CBM GL Account field to product types,
  * to be able to assign product sales to be tied to specific accounts.
  */
@@ -827,8 +797,7 @@ function buildPostHeader($postString, $settings) {
 }
 
 function sendPost($fp, $post) {
-
-  $write = fwrite($fp, $post);
+  fwrite($fp, $post);
   //watchdog('commerce_ubc_cbm', "postToCBM Post:\n$post", WATCHDOG_DEBUG);
   $result = '';
   while (!feof($fp)) {
