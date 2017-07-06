@@ -17,12 +17,9 @@
  * MERCHANT_ID = merchant transaction id as returned in notification/continuation request (needed in notification response)
  */
 
-define('TICKET_SUCCESSFUL', '100');
-define('MASTER_TICKET_ERROR', '202');
-define('SESSION_TICKET_ERROR', '200');
-define('STATUS_SUCCESS', '0');
-define('STATUS_DECLINE', '5');
-define('STATUS_FAIL', '99');
+define('COMMERCE_UBC_CBM_STATUS_SUCCESS', '0');
+define('COMMERCE_UBC_CBM_STATUS_DECLINE', '5');
+define('COMMERCE_UBC_CBM_STATUS_FAIL', '99');
 
 /**
  * Implements hook_commerce_payment_method_info().
@@ -366,7 +363,7 @@ function commerce_ubc_cbm_redirect_form_validate($order, $payment_method) {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['STATUS_CODE'])) {
       $status = $_POST['STATUS_CODE'];
-      if ($status == STATUS_FAIL || $status == STATUS_DECLINE) {
+      if ($status == COMMERCE_UBC_CBM_STATUS_FAIL || $status == COMMERCE_UBC_CBM_STATUS_DECLINE) {
         // update transaction to show fail
         $transaction = getTransactionByPropery('order_id', $order->order_id);
         $now = date("Y-m-d H:i:s", time());
@@ -664,7 +661,7 @@ function commerce_ubc_cbm_redirect_form_submit() {
     $trans_id = $_POST['MERCHANT_ID'];
     $message = $_POST['MESSAGE'];
     $amount = $_POST['AMOUNT'];
-    $status = ($remote_status == STATUS_SUCCESS ? 'success' : 'failure');
+    $status = ($remote_status == COMMERCE_UBC_CBM_STATUS_SUCCESS ? 'success' : 'failure');
 
     if ($transaction = getTransactionByPropery('transaction_id', $trans_id)) {
       $transaction->payload[$now] = array('notification_request' => $_POST);
