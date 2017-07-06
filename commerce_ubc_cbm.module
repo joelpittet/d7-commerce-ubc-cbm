@@ -88,7 +88,6 @@ function commerce_ubc_cbm_help($path, $arg) {
  * Returns the default settings for the UBC CBM payment method.
  */
 function commerce_ubc_cbm_default_settings() {
-  $default_currency = variable_get('commerce_default_currency', 'CAD');
   $settings = array(
     'cbm_merchant' => array(
       'cbm_merchant_id' => '',
@@ -250,7 +249,7 @@ function commerce_ubc_cbm_add_account_field() {
       'settings' => array('allowed_values' => getAccountListArray('default|Default Account')),
     );
 
-    $field = field_create_field($field);
+    field_create_field($field);
   }
 
   $product_types = commerce_product_types();
@@ -282,7 +281,7 @@ function commerce_ubc_cbm_add_account_field() {
         );
       }
 
-      $new_instance = field_create_instance($instance);
+      field_create_instance($instance);
     }
   }
 
@@ -357,7 +356,6 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
 
   $settings = $payment_method['settings'];
   $continue = '/checkout/' . $order->order_id . '/payment/return/' . $order->data['payment_redirect_key'];
-  $server = 'payment';
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
   $charge['currency_code'] = $order_wrapper->commerce_order_total->currency_code->value();
@@ -469,7 +467,6 @@ function initTransaction($payment_method, $charge, $order) {
 function getTransactionByPropery($property, $value) {
   $type = 'commerce_payment_transaction';
   $qry = new EntityFieldQuery();
-  $entities = array();
   $result = $qry->entityCondition('entity_type', $type)
     ->propertyCondition($property, $value)
     ->entityOrderBy('revision_id')
@@ -544,7 +541,7 @@ function loadRequest() {
  * Listener to process incoming Payment Service Notification requests
  */
 function processNotificationRequest() {
-
+  $xml = '';
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $now = date("Y-m-d H:i:s", time());
     $xmlArray = loadRequest();
@@ -598,7 +595,6 @@ function processNotificationRequest() {
   ));
   header('Content-Type: text/xml');
   print $xml;
-  //print "no post.";
 }
 
 function buildNotificationXML($cbm_id, $trans_id, $status) {
@@ -629,12 +625,11 @@ function commerce_ubc_cbm_redirect_form_submit() {
       '!param' => '<pre>' . check_plain(print_r($_POST, TRUE)) . '</pre>',
       WATCHDOG_DEBUG
     ));
-
-    $remote_id = $_POST['CBM_ID'];
+    // @see A list of variables in the post request:
+    // https://epayment.it.ubc.ca/developers/web-service-integration/record-layouts-apis
     $remote_status = $_POST['STATUS_CODE'];
     $trans_id = $_POST['MERCHANT_ID'];
     $message = $_POST['MESSAGE'];
-    $amount = $_POST['AMOUNT'];
     $status = ($remote_status == COMMERCE_UBC_CBM_STATUS_SUCCESS ? 'success' : 'failure');
 
     if ($transaction = getTransactionByPropery('transaction_id', $trans_id)) {
