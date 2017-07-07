@@ -296,24 +296,17 @@ function commerce_ubc_cbm_add_account_field() {
  * property of the returned form array.
  */
 function commerce_ubc_cbm_redirect_form($form, &$form_state, $order, $payment_method) {
-
   if (empty($payment_method['settings']['cbm_merchant']['cbm_merchant_id'])) {
-    $message = 'UBC ePayment is not configured for use. No ePayment account has been set up.';
-    drupal_set_message(t($message), 'error');
-    watchdog('commerce_ubc_cbm', 'Payment redirect form cannot be built: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>',
-      WATCHDOG_ERROR
-    ));
+    $message = t('UBC ePayment is not configured for use. No ePayment account has been set up.');
+    drupal_set_message($message, 'error');
+    watchdog('commerce_ubc_cbm', 'Payment redirect form cannot be built: <pre>@message</pre>', array('@message' => $message), WATCHDOG_ERROR);
     return array();
   }
 
   if (!($wrapper = entity_metadata_wrapper('commerce_order', $order))) {
-    $message = 'UBC ePayment is not configured for use. Order not available.';
-    drupal_set_message(t($message), 'error');
-    watchdog('commerce_ubc_cbm', 'Payment redirect form cannot be built: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>',
-      WATCHDOG_ERROR
-    ));
+    $message = t('UBC ePayment is not configured for use. Order not available.');
+    drupal_set_message($message, 'error');
+    watchdog('commerce_ubc_cbm', 'Payment redirect form cannot be built: <pre>@message</pre>', array('@message' => $message), WATCHDOG_ERROR);
     return array();
   }
 
@@ -418,10 +411,7 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
 
     // Save the transaction information.
     commerce_payment_transaction_save($transaction);
-    watchdog('commerce_ubc_cbm', 'Built payment request for transaction: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($transaction, TRUE)) . '</pre>',
-      WATCHDOG_DEBUG
-    ));
+    watchdog('commerce_ubc_cbm', 'Built payment request for transaction: <pre>@message</pre>', array('@message' => print_r($transaction, TRUE)), WATCHDOG_DEBUG);
 
     // 6. Build form values
     $form['#action'] = buildPaymentURL($settings);
@@ -439,12 +429,9 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
     return $form;
   }
   else {
-    $message = 'UBC ePayment problem processing order. No transaction found';
-    drupal_set_message(t($message), 'error');
-    watchdog('commerce_ubc_cbm', 'Payment request cannot be build: : !param', array(
-      '!param' => '<pre>' . check_plain(print_r($message, TRUE)) . '</pre>',
-      WATCHDOG_ERROR
-    ));
+    $message = t('UBC ePayment problem processing order. No transaction found');
+    drupal_set_message($message, 'error');
+    watchdog('commerce_ubc_cbm', 'Payment request cannot be build: <pre>@message</pre>', array('@message' => $message), WATCHDOG_ERROR);
     return array();
   }
 
@@ -499,8 +486,7 @@ function getGLAccountAmounts($order, $settings) {
       }
       $accounts[$gl_account] += ((int) $line_item_wrapper->quantity->value() * $line_item_wrapper->commerce_unit_price->amount->value());
     }
-    //watchdog('commerce_ubc_cbm', 'Line Item properties. !param', array('!param' => '<pre>' . check_plain(print_r($line_item_wrapper, TRUE)) . '</pre>', WATCHDOG_DEBUG));
-
+    //watchdog('commerce_ubc_cbm', 'Line Item properties. <pre>@message</pre>', array('@message' => print_r($line_item_wrapper, TRUE)), WATCHDOG_DEBUG);
   }
 
   return $accounts;
@@ -546,16 +532,14 @@ function processNotificationRequest() {
     $now = date("Y-m-d H:i:s", time());
     $xmlArray = loadRequest();
     if (!isset($xmlArray['MERCHANT_ID'])) {
-      watchdog('commerce_ubc_cbm', 'Problem with notification request. No transaction id included. !param', array(
-        '!param' => '<pre>' . check_plain(print_r($xmlArray, TRUE)) . '</pre>',
-        WATCHDOG_ERROR
-      ));
+      watchdog('commerce_ubc_cbm', 'Problem with notification request. No transaction id included. @message', array(
+        '@message' => print_r($xmlArray, TRUE),
+      ), WATCHDOG_ERROR);
       // goto fail page?
     }
-    watchdog('commerce_ubc_cbm', 'Notification request received: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($_POST, TRUE)) . '</pre>',
-      WATCHDOG_DEBUG
-    ));
+    watchdog('commerce_ubc_cbm', 'Notification request received: <pre>@message</pre>', array(
+      '@message' => print_r($_POST, TRUE),
+    ), WATCHDOG_DEBUG);
 
     $trans_id = $xmlArray['MERCHANT_ID'];
     $remote_id = $xmlArray['CBM_ID'];
@@ -574,10 +558,9 @@ function processNotificationRequest() {
       $transaction->payload[$now] = array('notification_response' => $XMLArray);
 
       commerce_payment_transaction_save($transaction);
-      watchdog('commerce_ubc_cbm', 'Built notification response for transaction: !param', array(
-        '!param' => '<pre>' . check_plain(print_r($transaction, TRUE)) . '</pre>',
-        WATCHDOG_DEBUG
-      ));
+      watchdog('commerce_ubc_cbm', 'Built notification response for transaction: <pre>@message</pre>', array(
+        '@message' => print_r($transaction, TRUE),
+      ), WATCHDOG_DEBUG);
 
       //Increment Order status to Pending, since this transaction is happening
       $order = commerce_order_load($transaction->order_id);
@@ -589,10 +572,9 @@ function processNotificationRequest() {
     }
   }
   $response = array('xml_response' => $xml);
-  watchdog('commerce_ubc_cbm', 'Sending notification response: !param', array(
-    '!param' => '<pre>' . check_plain(print_r($response, TRUE)) . '</pre>',
-    WATCHDOG_DEBUG
-  ));
+  watchdog('commerce_ubc_cbm', 'Sending notification response: <pre>@message</pre>', array(
+    '@message' => print_r($response, TRUE),
+  ), WATCHDOG_DEBUG);
   header('Content-Type: text/xml');
   print $xml;
 }
@@ -615,16 +597,14 @@ function commerce_ubc_cbm_redirect_form_submit() {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $now = date("Y-m-d H:i:s", time());
     if (!isset($_POST['MERCHANT_ID'])) {
-      watchdog('commerce_ubc_cbm', 'Problem with continuation request. No transaction id included: !param', array(
-        '!param' => '<pre>' . check_plain(print_r($_POST, TRUE)) . '</pre>',
-        WATCHDOG_ERROR
-      ));
+      watchdog('commerce_ubc_cbm', 'Problem with continuation request. No transaction id included: <pre>@message</pre>', array(
+        '@message' => print_r($_POST, TRUE),
+      ), WATCHDOG_ERROR);
       // goto fail page?
     }
-    watchdog('commerce_ubc_cbm', 'Continuation request received: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($_POST, TRUE)) . '</pre>',
-      WATCHDOG_DEBUG
-    ));
+    watchdog('commerce_ubc_cbm', 'Continuation request received: <pre>@message</pre>', array(
+      '@message' => print_r($_POST, TRUE),
+    ), WATCHDOG_DEBUG);
     // @see A list of variables in the post request:
     // https://epayment.it.ubc.ca/developers/web-service-integration/record-layouts-apis
     $remote_status = $_POST['STATUS_CODE'];
@@ -664,17 +644,15 @@ function requestSessionTicket($settings) {
           return $parsedXML['auth-ticket'];
         }
       }
-      watchdog('commerce_ubc_cbm', 'Session ticket response: !param', array(
-        '!param' => '<pre>' . check_plain(print_r($parsedXML, TRUE)) . '</pre>',
-        WATCHDOG_DEBUG
-      ));
+      watchdog('commerce_ubc_cbm', 'Session ticket response: <pre>@message</pre>', array(
+        '@message' => print_r($parsedXML, TRUE),
+      ), WATCHDOG_DEBUG);
     }
   }
   // need graceful failure error logging.
-  watchdog('commerce_ubc_cbm', 'Session ticket failed, no master ticket: !param', array(
-    '!param' => '<pre>' . check_plain(print_r($master_ticket, TRUE)) . '</pre>',
-    WATCHDOG_ERROR
-  ));
+  watchdog('commerce_ubc_cbm', 'Session ticket failed, no master ticket: <pre>@message</pre>', array(
+    '@message' => print_r($master_ticket, TRUE),
+  ), WATCHDOG_ERROR);
   drupal_set_message(t('Payment error. Could not establish connection with payment server.'), 'error');
   return FALSE;
 }
@@ -694,16 +672,14 @@ function requestMasterTicket($settings) {
         return $parsedXML['auth-ticket'];
       }
     }
-    watchdog('commerce_ubc_cbm', 'Master ticket response: !param', array(
-      '!param' => '<pre>' . check_plain(print_r($parsedXML, TRUE)) . '</pre>',
-      WATCHDOG_DEBUG
-    ));
+    watchdog('commerce_ubc_cbm', 'Master ticket response: <pre>@message</pre>', array(
+      '@message' => print_r($parsedXML, TRUE),
+    ), WATCHDOG_DEBUG);
     return;
   }
-  watchdog('commerce_ubc_cbm', 'Failed to get Master ticket response: !param', array(
-    '!param' => '<pre>' . check_plain(print_r($response, TRUE)) . '</pre>',
-    WATCHDOG_ERROR
-  ));
+  watchdog('commerce_ubc_cbm', 'Failed to get Master ticket response: <pre>@message</pre>', array(
+    '@message' => print_r($response, TRUE),
+  ), WATCHDOG_ERROR);
   //drupal_set_message(t('Payment error. Could not establish connection with payment server.'), 'error');
   return FALSE;
 }
@@ -746,10 +722,9 @@ function connectAuthenticationServer($settings) {
   $fp = fsockopen("ssl://" . $auth['host'], $auth['port'], $errno, $errstr, 30);
 
   if (!$fp) {
-    watchdog('commerce_ubc_cbm', 'Failed opening socket to authentication server!param', array(
-      '!param' => '<pre>' . check_plain(print_r($errstr, TRUE)) . check_plain(print_r($auth, TRUE)) . '</pre>',
-      WATCHDOG_ERROR
-    ));
+    watchdog('commerce_ubc_cbm', 'Failed opening socket to authentication server@message', array(
+      '@message' => print_r($errstr, TRUE) . print_r($auth, TRUE),
+    ), WATCHDOG_ERROR);
     return FALSE;
   }
   else {
@@ -809,10 +784,9 @@ function extractParam($data, $xmlFieldNames) {
       $parsedXML[$xmlField] = substr($remainder, $start_pos, $data_len);
     }
     else {
-      watchdog('commerce_ubc_cbm', 'Unable to find xml field data in response: !param', array(
-        '!param' => '<pre>' . check_plain(print_r($xmlFieldNames, TRUE)) . '</pre>',
-        WATCHDOG_ERROR
-      ));
+      watchdog('commerce_ubc_cbm', 'Unable to find xml field data in response: <pre>@message</pre>', array(
+        '@message' => print_r($xmlFieldNames, TRUE),
+      ), WATCHDOG_ERROR);
       return FALSE;
     }
   }
