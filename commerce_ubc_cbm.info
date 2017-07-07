@@ -1,5 +1,6 @@
 name = UBC CBM Payment
 description = UBC ePayment/CBM transaction payment module
+configure = admin/commerce/config/commerce-ubc-cbm
 core = 7.x
 version = 7.x-1.x-dev
 package = UBC IT Web Services

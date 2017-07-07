@@ -29,3 +29,12 @@ function commerce_ubc_cbm_disable() {
     ->condition('name', 'commerce_payment_commerce_ubc_cbm')
     ->execute();
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function commerce_ubc_cbm_uninstall() {
+  db_delete('variable')
+    ->condition('name', 'commerce_ubc_cbm_%', 'LIKE')
+    ->execute();
+}

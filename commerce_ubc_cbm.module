@@ -53,15 +53,21 @@ function commerce_ubc_cbm_permission() {
       'description' => t('Access UBC CBM for server to server communication.'),
     ),
   );
-
 }
 
 /**
  * Implements hook_menu().
  */
 function commerce_ubc_cbm_menu() {
-
-  $items = array();
+  $items['admin/commerce/config/commerce-ubc-cbm'] = array(
+    'title' => 'Configure the CBM module',
+    'description' => 'Provide service endpoints and developer testing settings for the UBC CBM.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_ubc_cbm_form_settings'),
+    'file' => 'commerce_ubc_cbm.admin.inc',
+    'access arguments' => array('configure store'),
+    'type' => MENU_NORMAL_ITEM,
+  );
 
   $items['epayment/notification'] = array(
     'title' => 'ePayment Notification Request Listener',
@@ -94,14 +100,6 @@ function commerce_ubc_cbm_default_settings() {
       'cbm_user_id' => '',
       'cbm_user_cred' => '',
       'cbm_default_fms' => '',
-      'cbm_prod_auth_url' => '',
-      'cbm_prod_pay_url' => '',
-    ),
-    'cbm_debugging' => array(
-      'test_mode' => 1,
-      'cbm_test_auth_url' => '',
-      'cbm_test_pay_url' => '',
-      //'log' => array('request' => 0, 'response' => 0),
     ),
   );
 
@@ -117,11 +115,8 @@ function commerce_ubc_cbm_default_settings() {
  *   A form snippet.
  */
 function commerce_ubc_cbm_settings_form($settings = NULL) {
-
   $settings += commerce_ubc_cbm_default_settings();
-  $form = array();
-  $instruct_text = 'Enter information here about your merchant account with SIS/ePayment. If you have multiple GL Accounts set up with SIS, and want to be able to have sales applied to different accounts. !accountlink for any of your product types and edit CBM GL Account field.';
-  $message = t($instruct_text, array('!accountlink' => l('Select manage fields', 'admin/commerce/products/types')));
+  $message = t('Enter information here about your merchant account with SIS/ePayment. If you have multiple GL Accounts set up with SIS, and want to be able to have sales applied to different accounts. <a href="@url">Select manage fields</a> for any of your product types and edit CBM GL Account field.', array('@url' => url('admin/commerce/products/types')));
 
   $form['cbm_merchant'] = array(
     '#type' => 'fieldset',
@@ -154,22 +149,6 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
     '#description' => t('The merchant password provided by SIS/ePayment to use for authentication to submit payment transaction.'),
     '#required' => TRUE,
   );
-  $form['cbm_merchant']['cbm_prod_auth_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Authentication Server'),
-    '#size' => 60,
-    '#default_value' => $settings['cbm_merchant']['cbm_prod_auth_url'],
-    '#description' => t('The authentication server URL for production.'),
-    '#required' => TRUE,
-  );
-  $form['cbm_merchant']['cbm_prod_pay_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('ePayment Web Service'),
-    '#size' => 60,
-    '#default_value' => $settings['cbm_merchant']['cbm_prod_pay_url'],
-    '#description' => t('The ePayment Web Service URL for production.'),
-    '#required' => TRUE,
-  );
   $form['cbm_merchant']['cbm_default_fms'] = array(
     '#type' => 'textfield',
     '#title' => t('Default UBC FMS Account'),
@@ -177,54 +156,6 @@ function commerce_ubc_cbm_settings_form($settings = NULL) {
     '#default_value' => $settings['cbm_merchant']['cbm_default_fms'],
     '#description' => t('Optional: UBC Financial Management System account to use for all sales. If you have already provided this to SIS ePayment you can leave this blank.'),
   );
-  $form['cbm_debugging'] = array(
-    '#type' => 'fieldset',
-    '#title' => t("Testing and Debugging Settings"),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-  $form['cbm_debugging']['test_mode'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Testing Mode'),
-    '#description' => t('Handle payment transactions using CBM testing servers only. Uncheck for live production payment transactions.'),
-    '#default_value' => $settings['cbm_debugging']['test_mode'],
-  );
-  $form['cbm_debugging']['cbm_test_auth_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Authentication Server (Testing)'),
-    '#size' => 60,
-    '#default_value' => $settings['cbm_debugging']['cbm_test_auth_url'],
-    '#description' => t('The authentication server URL for testing.'),
-    '#states' => array(
-      'enabled' => array(
-        ':input[name="parameter[payment_method][settings][payment_method][settings][cbm_debugging][test_mode]"]' => array('checked' => TRUE),
-      ),
-    ),
-  );
-  $form['cbm_debugging']['cbm_test_pay_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('ePayment Web Service (Testing)'),
-    '#size' => 60,
-    '#default_value' => $settings['cbm_debugging']['cbm_test_pay_url'],
-    '#description' => t('The ePayment Web Service URL for testing'),
-    '#states' => array(
-      'enabled' => array(
-        ':input[name="parameter[payment_method][settings][payment_method][settings][cbm_debugging][test_mode]"]' => array('checked' => TRUE),
-      ),
-    ),
-  );
-  /* for now logging everything by default, may want to add this control later.
-   $form['cbm_debugging']['log'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Log the following messages for debugging'),
-      '#options' => array(
-        'request' => t('API request messages'),
-        'response' => t('API response messages'),
-      ),
-      '#default_value' => $settings['cbm_debugging']['log'],
-      '#description'=>t('Recommended even in live production.'),
-  );*/
-
 
   return $form;
 }
@@ -423,8 +354,8 @@ function commerce_ubc_cbm_payment_form($form, $form_state, $order, $payment_meth
       WATCHDOG_DEBUG
     ));
 
-    // 6. Build form values
-    $form['#action'] = buildPaymentURL($settings);
+    // 6. Build form values.
+    $form['#action'] = buildPaymentURL();
 
     foreach ($nvp as $name => $value) {
       if (!empty($value)) {
@@ -516,12 +447,23 @@ function getAccountListArray($list) {
   return $new;
 }
 
-function buildPaymentURL($settings) {
-  if ($settings['cbm_debugging']['test_mode']) {
-    $url = $settings['cbm_debugging']['cbm_test_pay_url'];
+function buildPaymentURL() {
+  if (variable_get('commerce_ubc_cbm_test_mode', 1)) {
+    $url = variable_get('commerce_ubc_cbm_test_pay_url', '');
   }
   else {
-    $url = $settings['cbm_merchant']['cbm_prod_pay_url'];
+    $url = variable_get('commerce_ubc_cbm_prod_pay_url', '');
+  }
+
+  return $url;
+}
+
+function buildAuthURL() {
+  if (variable_get('commerce_ubc_cbm_test_mode', 1)) {
+    $url = variable_get('commerce_ubc_cbm_test_auth_url', '');
+  }
+  else {
+    $url = variable_get('commerce_ubc_cbm_prod_auth_url', '');
   }
 
   return $url;
@@ -730,13 +672,10 @@ function sendAuthRequest($settings, $postData) {
 }
 
 function connectAuthenticationServer($settings) {
-
-  if ($settings['cbm_debugging']['test_mode']) {
+  $auth_url = buildAuthURL();
+  $auth = parse_url($auth_url);
+  if (variable_get('commerce_ubc_cbm_test_mode', 1)) {
     drupal_set_message(t('UBC ePayment module is in TESTING mode.'), 'warning');
-    $auth = parse_url($settings['cbm_debugging']['cbm_test_auth_url']);
-  }
-  else {
-    $auth = parse_url($settings['cbm_merchant']['cbm_prod_auth_url']);
   }
 
   if (empty($auth['port'])) {
@@ -767,13 +706,8 @@ function buildPostString($postData) {
 }
 
 function buildPostHeader($postString, $settings) {
-
-  if ($settings['cbm_debugging']['test_mode']) {
-    $auth = parse_url($settings['cbm_debugging']['cbm_test_auth_url']);
-  }
-  else {
-    $auth = parse_url($settings['cbm_merchant']['cbm_prod_auth_url']);
-  }
+  $auth_url = buildAuthURL();
+  $auth = parse_url($auth_url);
 
   if (empty($auth['port'])) {
     $auth['port'] = ($auth['scheme'] === 'https') ? 443 : 80;
